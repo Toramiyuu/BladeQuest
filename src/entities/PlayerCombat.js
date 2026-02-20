@@ -14,6 +14,11 @@ import {
   FLASH_INTERVAL_MS,
   AIR_BOUNCE_FORCE,
   BOUNCE_GUARD_MS,
+  PLAYER_DRAG_X,
+  DODGE_SPEED,
+  DODGE_DURATION_MS,
+  DODGE_IFRAME_MS,
+  DODGE_COOLDOWN_MS,
 } from "../config/constants.js";
 
 export const PlayerCombatMixin = {
@@ -85,9 +90,35 @@ export const PlayerCombatMixin = {
     this.airHitbox.setPosition(this.x, this.y + 14);
   },
 
+  _startDodge() {
+    this._rollMs = DODGE_DURATION_MS;
+    this._rollIframeMs = DODGE_IFRAME_MS;
+    this.body.setVelocityX(this.facing * DODGE_SPEED);
+    this.body.setAccelerationX(0);
+    this.body.setDragX(0);
+    this._stateMachine.transition("roll");
+  },
+
+  _updateDodge(dt) {
+    this._rollMs -= dt;
+    if (this._rollIframeMs > 0) this._rollIframeMs -= dt;
+    this.setAlpha(this._rollIframeMs > 0 ? 0.45 : 0.75);
+    if (this._rollMs <= 0) {
+      this._rollMs = 0;
+      this._rollCooldownMs = DODGE_COOLDOWN_MS;
+      this.body.setDragX(PLAYER_DRAG_X);
+      this.setAlpha(1);
+      this._stateMachine.transition(this.body.blocked.down ? "idle" : "fall");
+    }
+  },
+
   /** Called when player takes damage (from GameScene overlap callback). */
   takeDamage(amount, sourceX) {
-    if (this.healthSystem && !this.healthSystem.isInvulnerable()) {
+    if (
+      this.healthSystem &&
+      !this.healthSystem.isInvulnerable() &&
+      this._rollIframeMs <= 0
+    ) {
       this.healthSystem.takeDamage(amount);
 
       const dir = this.x > sourceX ? 1 : -1;
@@ -100,6 +131,7 @@ export const PlayerCombatMixin = {
 
   /** Update invulnerability visual flash. Call from GameScene update after takeDamage. */
   updateInvulnerabilityFlash(dt) {
+    if (this._rollMs > 0) return;
     if (!this.healthSystem || !this.healthSystem.isInvulnerable()) {
       this.setAlpha(1);
       this._flashMs = 0;

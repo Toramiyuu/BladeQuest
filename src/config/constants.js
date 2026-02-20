@@ -70,6 +70,11 @@ export const BAT_SPEED = 80;
 export const BAT_HEALTH = 1;
 export const BAT_DAMAGE = 1;
 
+export const DODGE_SPEED = 280;
+export const DODGE_DURATION_MS = 300;
+export const DODGE_IFRAME_MS = 150;
+export const DODGE_COOLDOWN_MS = 800;
+
 export const BOSS_BASE_HP = 5;
 export const BOSS_HP_PER_TIER = 3;
 export const BOSS_DAMAGE = 2;

@@ -29,6 +29,7 @@ import {
   AIR_RECOVERY_MS,
   COMBO_WINDOW_MS,
   AIR_BOUNCE_FORCE,
+  DODGE_COOLDOWN_MS,
 } from "../config/constants.js";
 
 const PLAYER_SCALE = 0.35;
@@ -124,7 +125,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       attack2: Phaser.Input.Keyboard.KeyCodes.K,
       ability: Phaser.Input.Keyboard.KeyCodes.C,
       ability2: Phaser.Input.Keyboard.KeyCodes.V,
+      dodge: Phaser.Input.Keyboard.KeyCodes.SHIFT,
     });
+
+    this._rollMs = 0;
+    this._rollCooldownMs = 0;
+    this._rollIframeMs = 0;
   }
 
   _setupStateMachine() {
@@ -154,6 +160,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     sm.addState("air_attack", {
       enter: () => this._playAnim("player-attack1"),
     });
+    sm.addState("roll", {
+      enter: () => this._playAnim("player-run"),
+    });
   }
 
   _playAnim(key) {
@@ -180,6 +189,24 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     const isGrounded = body.blocked.down;
 
     this._coyoteTimer.update({ isGrounded, deltaMs: dt });
+
+    if (this._rollCooldownMs > 0) this._rollCooldownMs -= dt;
+
+    const dodgeJustPressed = Phaser.Input.Keyboard.JustDown(this._keys.dodge);
+    if (
+      dodgeJustPressed &&
+      !this.isInAttackState &&
+      this._rollMs <= 0 &&
+      this._rollCooldownMs <= 0
+    ) {
+      this._startDodge();
+    }
+
+    if (this._rollMs > 0) {
+      this._updateDodge(dt);
+      this._updateHitboxPositions();
+      return;
+    }
 
     if (this._knockbackLockMs > 0) {
       this._knockbackLockMs -= dt;
@@ -287,6 +314,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.clearTint();
     if (this.manaSystem) this.manaSystem.reset();
     if (this.abilitySystem) this.abilitySystem.reset();
+    this._rollMs = 0;
+    this._rollCooldownMs = 0;
+    this._rollIframeMs = 0;
+    this.setAlpha(1);
     this._stateMachine.transition("idle");
   }
 }
