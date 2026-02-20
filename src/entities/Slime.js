@@ -2,24 +2,29 @@ import Enemy from "./Enemy.js";
 import SlimeAI from "../systems/SlimeAI.js";
 import { SLIME_HEALTH, MAX_DELTA_MS } from "../config/constants.js";
 
-const SQUISH_DURATION = 200;
-
 /**
  * Slime — ground-patrolling enemy.
  *
  * Receives a `groundLayer` reference (Phaser.Tilemaps.TilemapLayer or null).
  * When null (temp-ground mode), bounds detection uses world bounds only.
  */
+const SKEL_SCALE = 0.55;
+
 export default class Slime extends Enemy {
   constructor(scene, x, y, groundLayer = null) {
-    super(scene, x, y, "slime", SLIME_HEALTH);
+    super(scene, x, y, "skel-idle", SLIME_HEALTH);
 
     this._ai = new SlimeAI();
     this._groundLayer = groundLayer;
 
+    this.setScale(SKEL_SCALE);
+    this.body.setSize(24, 40);
+    this.body.setOffset(20, 20);
     this.setDepth(5);
     this.body.setGravityY(0);
     this.body.setMaxVelocityX(200);
+
+    this.play("skel-walk");
   }
 
   /**
@@ -73,16 +78,20 @@ export default class Slime extends Enemy {
     this.setFlipX(this._ai.direction === 1);
   }
 
-  /** Override to add squish tween before destroy. */
   _die() {
-    super._die();
-    this.scene.tweens.add({
-      targets: this,
-      scaleY: 0,
-      scaleX: 1.5,
-      duration: SQUISH_DURATION,
-      ease: "Quad.easeIn",
-      onComplete: () => this.destroy(),
+    this._isDead = true;
+    this.body.enable = false;
+    this.play("skel-death");
+    this.once("animationcomplete", () => {
+      this.scene.tweens.add({
+        targets: this,
+        alpha: 0,
+        duration: 200,
+        onComplete: () => {
+          this.setActive(false);
+          this.destroy();
+        },
+      });
     });
   }
 }

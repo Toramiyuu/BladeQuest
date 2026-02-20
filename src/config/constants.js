@@ -53,8 +53,27 @@ export const SLIME_HEALTH = 1;
 export const SLIME_DAMAGE = 1;
 export const SLIME_DEATH_MS = 200;
 
+export const FALL_DEATH_MARGIN = 32;
+
 export const MAX_DELTA_MS = 50;
 
 export const HUD_HEART_X = 12;
 export const HUD_HEART_Y = 12;
 export const HUD_HEART_SPACING = 24;
+
+export const MAX_MANA = 100;
+export const MANA_REGEN_RATE = 5;
+export const KUNAI_MANA_COST = 25;
+export const HOLY_SLASH_MANA_COST = 35;
+
+export const BAT_SPEED = 80;
+export const BAT_HEALTH = 1;
+export const BAT_DAMAGE = 1;
+
+export const BOSS_BASE_HP = 5;
+export const BOSS_HP_PER_TIER = 3;
+export const BOSS_DAMAGE = 2;
+export const BOSS_PATROL_SPEED = 60;
+export const BOSS_CHARGE_SPEED = 180;
+export const BOSS_CHARGE_RANGE = 120;
+export const BOSS_JUMP_FORCE = -300;

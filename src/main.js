@@ -2,7 +2,12 @@ import Phaser from "phaser";
 import { GAME_WIDTH, GAME_HEIGHT, GRAVITY_Y } from "./config/constants.js";
 import BootScene from "./scenes/BootScene.js";
 import GameScene from "./scenes/GameScene.js";
+import HubScene from "./scenes/HubScene.js";
+import DungeonScene from "./scenes/DungeonScene.js";
 import UIScene from "./scenes/UIScene.js";
+import BlacksmithScene from "./scenes/BlacksmithScene.js";
+import PotionShopScene from "./scenes/PotionShopScene.js";
+import GuildBoardScene from "./scenes/GuildBoardScene.js";
 
 const config = {
   type: Phaser.AUTO,
@@ -22,7 +27,16 @@ const config = {
       debug: false,
     },
   },
-  scene: [BootScene, GameScene, UIScene],
+  scene: [
+    BootScene,
+    HubScene,
+    DungeonScene,
+    GameScene,
+    UIScene,
+    BlacksmithScene,
+    PotionShopScene,
+    GuildBoardScene,
+  ],
 };
 
 export default new Phaser.Game(config);

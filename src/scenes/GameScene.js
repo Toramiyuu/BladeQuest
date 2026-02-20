@@ -12,7 +12,9 @@ import {
   CAMERA_LEAD_X,
   CAMERA_LERP_X,
   CAMERA_LERP_Y,
+  FALL_DEATH_MARGIN,
 } from "../config/constants.js";
+import { createAnimations } from "../config/animations.js";
 
 const DEATH_FREEZE_MS = 800;
 
@@ -26,12 +28,13 @@ export default class GameScene extends Phaser.Scene {
     this._events = this.registry.get("events");
 
     this._loadTilemap();
+    createAnimations(this.anims);
     this._spawnEntities();
     this._setupOverlaps();
     this._setupCamera();
-    this._createAnimations();
 
     this._healthSystem = new HealthSystem(MAX_HEALTH);
+    this._healthSystem.grantInvulnerability();
     this.player.healthSystem = this._healthSystem;
 
     this._dyingMs = 0;
@@ -46,7 +49,10 @@ export default class GameScene extends Phaser.Scene {
     this.map = this.make.tilemap({ key: "test-level" });
     const tileset = this.map.addTilesetImage("tiles", "tiles");
 
+    this._createParallaxBackground();
+
     this.bgLayer = this.map.createLayer("background", tileset, 0, 0);
+    this.bgLayer.setAlpha(0);
     this.groundLayer = this.map.createLayer("ground", tileset, 0, 0);
     this.groundLayer.setCollisionByExclusion([-1]);
 
@@ -142,29 +148,31 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
-  _createAnimations() {
-    if (!this.anims.exists("player-idle")) {
-      this.anims.create({
-        key: "player-idle",
-        frames: this.anims.generateFrameNumbers("player-idle", {
-          start: 0,
-          end: 3,
-        }),
-        frameRate: 6,
-        repeat: -1,
-      });
-    }
-    if (!this.anims.exists("player-run")) {
-      this.anims.create({
-        key: "player-run",
-        frames: this.anims.generateFrameNumbers("player-run", {
-          start: 0,
-          end: 5,
-        }),
-        frameRate: 10,
-        repeat: -1,
-      });
-    }
+  _createParallaxBackground() {
+    const cam = this.cameras.main;
+    const vw = cam.width;
+    const vh = cam.height;
+
+    const sky = this.add.tileSprite(0, 0, vw, vh, "bg-sky");
+    sky.setOrigin(0, 0);
+    sky.setScrollFactor(0, 0);
+    sky.setDisplaySize(vw, vh);
+    sky.setDepth(-30);
+
+    const hills = this.add.tileSprite(0, vh * 0.55, vw, 176, "bg-hills");
+    hills.setOrigin(0, 0);
+    hills.setScrollFactor(0, 0);
+    hills.setDisplaySize(vw, 50);
+    hills.setDepth(-20);
+
+    const trees = this.add.tileSprite(0, vh * 0.45, vw, 387, "bg-trees");
+    trees.setOrigin(0, 0);
+    trees.setScrollFactor(0, 0);
+    trees.setDisplaySize(vw, 70);
+    trees.setAlpha(0.7);
+    trees.setDepth(-10);
+
+    this._bgLayers = { sky, hills, trees };
   }
 
   _emitHealthChanged() {
@@ -216,6 +224,13 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
 
+    if (this.player.y > this.map.heightInPixels + FALL_DEATH_MARGIN) {
+      this._healthSystem.kill();
+      this._emitHealthChanged();
+      this._handleDeath(dt);
+      return;
+    }
+
     this._prevHealth = this._healthSystem.currentHealth;
     this._healthSystem.update(dt);
     if (this._healthSystem.currentHealth !== this._prevHealth) {
@@ -228,6 +243,10 @@ export default class GameScene extends Phaser.Scene {
     this.slimeGroup.getChildren().forEach((slime) => {
       if (slime.active) slime.update(_time, dt);
     });
+
+    const camX = this.cameras.main.scrollX;
+    this._bgLayers.hills.tilePositionX = camX * 0.2;
+    this._bgLayers.trees.tilePositionX = camX * 0.5;
 
     const leadX = this.player.x + this.player.facing * CAMERA_LEAD_X;
     this.cameraTarget.x = Phaser.Math.Linear(

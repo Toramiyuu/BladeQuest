@@ -30,12 +30,33 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this._health -= amount;
     if (this._health <= 0) {
       this._die();
+    } else {
+      this.setTint(0xffffff);
+      this.scene.time.delayedCall(80, () => {
+        if (this.active) this.clearTint();
+      });
     }
   }
 
   /** Override in subclass for custom death effects; call super._die(). */
   _die() {
     this._isDead = true;
+
+    const dx = this.x;
+    const dy = this.y;
+    if (this.scene && this.scene.add) {
+      this.scene.add.particles(dx, dy, "particle-death", {
+        speed: { min: 20, max: 80 },
+        angle: { min: 0, max: 360 },
+        lifespan: 300,
+        quantity: 8,
+        maxParticles: 8,
+        tint: 0xff4444,
+        alpha: { start: 1, end: 0 },
+        gravityY: 100,
+      });
+    }
+
     this.setActive(false);
     this.body.enable = false;
   }

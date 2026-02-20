@@ -18,7 +18,9 @@ import {
 
 export const PlayerCombatMixin = {
   _updateCombatSystem(dt, isGrounded) {
-    const attackJustPressed = Phaser.Input.Keyboard.JustDown(this._keys.attack);
+    const attackJustPressed =
+      Phaser.Input.Keyboard.JustDown(this._keys.attack) ||
+      Phaser.Input.Keyboard.JustDown(this._keys.attack2);
 
     const wasActive = this._combatSystem.hitboxActive;
     this._combatSystem.update(dt, {

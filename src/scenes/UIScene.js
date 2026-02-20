@@ -1,9 +1,8 @@
 import Phaser from "phaser";
-import {
-  HUD_HEART_X,
-  HUD_HEART_Y,
-  HUD_HEART_SPACING,
-} from "../config/constants.js";
+import { UISceneHUDMixin } from "./UISceneHUD.js";
+import { UISceneMinimapMixin } from "./UISceneMinimap.js";
+import { UISceneOverlaysMixin } from "./UISceneOverlays.js";
+import { UISceneStatsMixin } from "./UISceneStats.js";
 
 export default class UIScene extends Phaser.Scene {
   constructor() {
@@ -13,55 +12,45 @@ export default class UIScene extends Phaser.Scene {
   create() {
     const events = this.registry.get("events");
 
-    events.off("health-changed", this._onHealthChanged, this);
-    events.on("health-changed", this._onHealthChanged, this);
-
     this._hearts = [];
     this._maxHearts = 0;
     this._prevHealth = 0;
+
+    const bind = (name, handler) => {
+      events.off(name, handler, this);
+      events.on(name, handler, this);
+    };
+
+    bind("health-changed", this._onHealthChanged);
+    bind("mana-changed", this._onManaChanged);
+    bind("floor-changed", this._onFloorChanged);
+    bind("potion-loadout-changed", this._onPotionLoadoutChanged);
+    bind("layout-changed", this._onLayoutChanged);
+    bind("player-moved", this._onPlayerMoved);
+    bind("ability-info", this._onAbilityInfo);
+    bind("ability-used", this._onAbilityUsed);
+    bind("save-complete", this._onSaveComplete);
+    bind("save-failed", this._onSaveFailed);
+    bind("boss-warning", this._onBossWarning);
+
+    this._createManaBar();
+    this._createAbilitySlot();
+    this._createFloorText();
+    this._createPotionSlots();
+    this._createMinimap();
+    this._initHelpKeys();
+    this._initStatsKeys();
   }
 
-  /** Lazily build or rebuild heart images when max changes. */
-  _buildHearts(max) {
-    this._hearts.forEach((h) => h.destroy());
-    this._hearts = [];
-    this._maxHearts = max;
-
-    for (let i = 0; i < max; i++) {
-      const x = HUD_HEART_X + i * HUD_HEART_SPACING;
-      const img = this.add
-        .image(x, HUD_HEART_Y, "heart-full")
-        .setOrigin(0, 0)
-        .setScrollFactor(0)
-        .setDepth(100);
-      this._hearts.push(img);
-    }
-  }
-
-  _onHealthChanged({ current, max }) {
-    if (max !== this._maxHearts) {
-      this._buildHearts(max);
-    }
-
-    this._hearts.forEach((heart, i) => {
-      const isFull = i < current;
-      heart.setTexture(isFull ? "heart-full" : "heart-empty");
-    });
-
-    const damagedIndex = current;
-    const isDamage = current < this._prevHealth;
-    this._prevHealth = current;
-
-    if (isDamage && damagedIndex >= 0 && damagedIndex < this._hearts.length) {
-      const h = this._hearts[damagedIndex];
-      this.tweens.add({
-        targets: h,
-        scaleX: 1.4,
-        scaleY: 1.4,
-        duration: 80,
-        yoyo: true,
-        ease: "Quad.easeOut",
-      });
-    }
+  update() {
+    this._updateManaBar();
   }
 }
+
+Object.assign(
+  UIScene.prototype,
+  UISceneHUDMixin,
+  UISceneMinimapMixin,
+  UISceneOverlaysMixin,
+  UISceneStatsMixin,
+);

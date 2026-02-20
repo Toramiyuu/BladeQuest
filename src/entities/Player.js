@@ -3,6 +3,9 @@ import StateMachine from "../systems/StateMachine.js";
 import { CoyoteTimer } from "../systems/InputBuffer.js";
 import CombatSystem from "../systems/CombatSystem.js";
 import { PlayerCombatMixin } from "./PlayerCombat.js";
+import ManaSystem from "../systems/ManaSystem.js";
+import AbilitySystem from "../systems/AbilitySystem.js";
+import { PlayerAbilityMixin } from "./PlayerAbility.js";
 import {
   PLAYER_SPEED,
   PLAYER_ACCELERATION,
@@ -28,13 +31,20 @@ import {
   AIR_BOUNCE_FORCE,
 } from "../config/constants.js";
 
+const PLAYER_SCALE = 0.35;
+
 export default class Player extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene, x, y) {
+  constructor(scene, x, y, classConfig = null) {
     super(scene, x, y, "player-idle", 0);
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
+    this.classConfig = classConfig;
+
+    this.setScale(PLAYER_SCALE);
+    this.body.setSize(30, 64);
+    this.body.setOffset(50, 58);
     this.body.setMaxVelocityX(PLAYER_SPEED);
     this.body.setDragX(PLAYER_DRAG_X);
     this.setDepth(10);
@@ -90,6 +100,18 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.healthSystem = null;
 
+    this.manaSystem = null;
+    this.abilitySystem = null;
+    if (classConfig) {
+      const { stats, ability } = classConfig;
+      this.manaSystem = new ManaSystem(stats.maxMana, stats.manaRegenRate);
+      this.abilitySystem = new AbilitySystem({
+        manaCost: ability.manaCost,
+        cooldownMs: ability.cooldownMs,
+        execute: () => this._executeAbility(),
+      });
+    }
+
     this._keys = scene.input.keyboard.addKeys({
       left: Phaser.Input.Keyboard.KeyCodes.LEFT,
       right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
@@ -98,7 +120,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       jump: Phaser.Input.Keyboard.KeyCodes.SPACE,
       jumpW: Phaser.Input.Keyboard.KeyCodes.W,
       jumpUp: Phaser.Input.Keyboard.KeyCodes.UP,
-      attack: Phaser.Input.Keyboard.KeyCodes.J,
+      attack: Phaser.Input.Keyboard.KeyCodes.X,
+      attack2: Phaser.Input.Keyboard.KeyCodes.K,
+      ability: Phaser.Input.Keyboard.KeyCodes.C,
+      ability2: Phaser.Input.Keyboard.KeyCodes.V,
     });
   }
 
@@ -112,26 +137,22 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       enter: () => this._playAnim("player-run"),
     });
     sm.addState("jump", {
-      enter: () => this.setTexture("player-jump", 0),
+      enter: () => this._playAnim("player-jump-up"),
     });
     sm.addState("fall", {
-      enter: () => this.setTexture("player-fall", 0),
+      enter: () => this._playAnim("player-fall"),
     });
     sm.addState("attack1", {
-      enter: () => this.setTint(0xffffff),
-      exit: () => this.clearTint(),
+      enter: () => this._playAnim("player-attack1"),
     });
     sm.addState("attack2", {
-      enter: () => this.setTint(0xffffff),
-      exit: () => this.clearTint(),
+      enter: () => this._playAnim("player-attack1"),
     });
     sm.addState("attack3", {
-      enter: () => this.setTint(0xffffff),
-      exit: () => this.clearTint(),
+      enter: () => this._playAnim("player-attack2"),
     });
     sm.addState("air_attack", {
-      enter: () => this.setTint(0xffffff),
-      exit: () => this.clearTint(),
+      enter: () => this._playAnim("player-attack1"),
     });
   }
 
@@ -237,6 +258,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     this._updateCombatSystem(dt, isGrounded);
 
+    this._updateAbilitySystem(dt);
+
     this._updateHitboxPositions();
   }
 
@@ -262,8 +285,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.hitEnemies.clear();
     this.setAlpha(1);
     this.clearTint();
+    if (this.manaSystem) this.manaSystem.reset();
+    if (this.abilitySystem) this.abilitySystem.reset();
     this._stateMachine.transition("idle");
   }
 }
 
 Object.assign(Player.prototype, PlayerCombatMixin);
+Object.assign(Player.prototype, PlayerAbilityMixin);

@@ -68,6 +68,17 @@ export default class HealthSystem {
     );
   }
 
+  /** Grant invulnerability (e.g. on spawn). */
+  grantInvulnerability() {
+    this._invulnerableMs = INVULNERABILITY_MS;
+  }
+
+  /** Instant kill — used for fall deaths. */
+  kill() {
+    this._currentHealth = 0;
+    this._invulnerableMs = 0;
+  }
+
   /** Full reset — used on player death/respawn. */
   reset() {
     this._currentHealth = this._maxHealth;
