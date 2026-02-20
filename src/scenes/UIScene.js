@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import SaveManager from "../systems/SaveManager.js";
 import { UISceneHUDMixin } from "./UISceneHUD.js";
 import { UISceneMinimapMixin } from "./UISceneMinimap.js";
 import { UISceneOverlaysMixin } from "./UISceneOverlays.js";
@@ -32,6 +33,15 @@ export default class UIScene extends Phaser.Scene {
     bind("save-complete", this._onSaveComplete);
     bind("save-failed", this._onSaveFailed);
     bind("boss-warning", this._onBossWarning);
+
+    this._saveResultBridge = (success) =>
+      events.emit(success ? "save-complete" : "save-failed");
+    SaveManager.onSaveResult(this._saveResultBridge);
+    this.events.once("shutdown", () => {
+      SaveManager._saveListeners = SaveManager._saveListeners.filter(
+        (fn) => fn !== this._saveResultBridge,
+      );
+    });
 
     this._createManaBar();
     this._createAbilitySlot();

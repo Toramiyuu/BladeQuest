@@ -7,6 +7,7 @@
  */
 
 import Phaser from "phaser";
+import { calculateIncoming } from "../systems/DefenseCalc.js";
 import {
   KNOCKBACK_X,
   KNOCKBACK_Y,
@@ -119,7 +120,8 @@ export const PlayerCombatMixin = {
       !this.healthSystem.isInvulnerable() &&
       this._rollIframeMs <= 0
     ) {
-      this.healthSystem.takeDamage(amount);
+      const actual = calculateIncoming(amount, this._armorTier ?? 0);
+      this.healthSystem.takeDamage(actual);
 
       const dir = this.x > sourceX ? 1 : -1;
       this.body.setVelocity(dir * KNOCKBACK_X, KNOCKBACK_Y);

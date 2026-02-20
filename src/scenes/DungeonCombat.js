@@ -6,6 +6,8 @@
 
 import { HEAVY_KNOCKBACK_X, SLIME_DAMAGE } from "../config/constants.js";
 import InventorySystem from "../systems/InventorySystem.js";
+import { calculateDamage } from "../systems/DamageCalc.js";
+import { calculateIncoming } from "../systems/DefenseCalc.js";
 import { getDropsForEnemy } from "../systems/DropSystem.js";
 import { PIXEL_FONT } from "../config/PixelFont.js";
 
@@ -15,6 +17,9 @@ export const DungeonCombatMixin = {
       this._dropShutdownRegistered = true;
       this.events.on("shutdown", () => InventorySystem.saveInventory());
     }
+    const inv = InventorySystem.getInventory();
+    this._weaponTier = inv.weaponTier ?? 0;
+    this.player._armorTier = inv.armorTier ?? 0;
     this._trackCollider(
       this.physics.add.overlap(
         this.player.groundHitbox,
@@ -56,27 +61,42 @@ export const DungeonCombatMixin = {
   _onGroundSlashHit(_hitbox, enemy) {
     if (this.player.hitEnemies.has(enemy)) return;
     this.player.hitEnemies.add(enemy);
-    if (this.player.combatSystem.currentAttack === "heavy") {
+    const isHeavy = this.player.combatSystem.currentAttack === "heavy";
+    if (isHeavy) {
       enemy.body.setVelocityX(this.player.facing * HEAVY_KNOCKBACK_X);
     }
+    const base = calculateDamage({
+      weaponTier: this._weaponTier,
+      classId: this._classId,
+      isHeavy,
+    });
+    const dmg = Math.ceil(base * (this.player._damageMultiplier ?? 1));
     const wasDead = enemy.isDead;
-    enemy.takeDamage(this.player._damageMultiplier ?? 1);
+    enemy.takeDamage(dmg);
     if (!wasDead && enemy.isDead) this._onEnemyDied(enemy);
+    this._showDamageNumber(enemy.x, enemy.y, dmg, isHeavy);
   },
 
   _onAirSlashHit(_hitbox, enemy) {
     if (this.player.hitEnemies.has(enemy)) return;
     this.player.hitEnemies.add(enemy);
+    const base = calculateDamage({
+      weaponTier: this._weaponTier,
+      classId: this._classId,
+    });
+    const dmg = Math.ceil(base * (this.player._damageMultiplier ?? 1));
     const wasDead = enemy.isDead;
-    enemy.takeDamage(this.player._damageMultiplier ?? 1);
+    enemy.takeDamage(dmg);
     this.player.applyAirSlashBounce();
     if (!wasDead && enemy.isDead) this._onEnemyDied(enemy);
+    this._showDamageNumber(enemy.x, enemy.y, dmg, false);
   },
 
   _onPlayerContactEnemy(_player, enemy) {
     if (!enemy.active) return;
     const before = this._healthSystem.currentHealth;
-    this.player.takeDamage(SLIME_DAMAGE, enemy.x);
+    const def = calculateIncoming(SLIME_DAMAGE, this.player._armorTier ?? 0);
+    this.player.takeDamage(def, enemy.x);
     if (this._healthSystem.currentHealth !== before) {
       this._emitHealthChanged();
       this.cameras.main.shake(120, 0.005);
@@ -112,10 +132,16 @@ export const DungeonCombatMixin = {
 
   _onKunaiHitEnemy(kunai, enemy) {
     if (!enemy.active) return;
+    const base = calculateDamage({
+      weaponTier: this._weaponTier,
+      classId: this._classId,
+    });
+    const dmg = Math.ceil(base * (this.player._damageMultiplier ?? 1));
     const wasDead = enemy.isDead;
-    enemy.takeDamage(1);
+    enemy.takeDamage(dmg);
     kunai.destroy();
     if (!wasDead && enemy.isDead) this._onEnemyDied(enemy);
+    this._showDamageNumber(enemy.x, enemy.y, dmg, false);
   },
 
   /** Called when an enemy transitions from alive → dead. Awards drops and shows floating text. */
@@ -132,6 +158,24 @@ export const DungeonCombatMixin = {
       InventorySystem.addMaterial("essence", drops.essence);
 
     this._showDropText(enemy.x, enemy.y, drops);
+  },
+
+  /** Floating damage number above enemy on hit. Yellow for heavy, white otherwise. */
+  _showDamageNumber(x, y, dmg, isHeavy) {
+    const tint = isHeavy ? 0xffdd44 : 0xffffff;
+    const txt = this.add
+      .bitmapText(x, y - 16, "pixel", `${dmg}`, 8)
+      .setOrigin(0.5)
+      .setTint(tint)
+      .setDepth(60);
+    this.tweens.add({
+      targets: txt,
+      y: y - 36,
+      alpha: 0,
+      duration: 700,
+      ease: "Quad.easeOut",
+      onComplete: () => txt.destroy(),
+    });
   },
 
   /** Shows a floating drop text at the given world position that floats up and fades. */

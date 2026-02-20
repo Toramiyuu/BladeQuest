@@ -52,7 +52,7 @@ export const DungeonPotionMixin = {
         if (this.player?.body) this.player.body.setMaxVelocityX(PLAYER_SPEED);
       });
     } else if (type === "strength") {
-      this.player._damageMultiplier = 2;
+      this.player._damageMultiplier = 1.5;
       if (this._strengthPotionTimer) this._strengthPotionTimer.remove();
       this._strengthPotionTimer = this.time.delayedCall(10000, () => {
         if (this.player) this.player._damageMultiplier = 1;
