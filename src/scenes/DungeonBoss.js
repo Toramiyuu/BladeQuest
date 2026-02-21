@@ -168,6 +168,7 @@ export const DungeonBossMixin = {
       this.player.y <= ry + rh
     ) {
       this._bossWarningShown = true;
+      this._audio?.play("bossRoar");
       this.cameras.main.shake(300, 0.01);
       const bossName = this._boss?._cfg?.name ?? "";
       this.registry.get("events").emit("boss-warning", { bossName });
@@ -199,6 +200,7 @@ export const DungeonBossMixin = {
     if (!this._boss.isDead) return;
 
     this._bossDefeated = true;
+    this._audio?.play("floorClear");
     SaveManager.clearBossFloor(this._currentFloor);
 
     const drops = getDropsForEnemy("boss", this._currentFloor);

@@ -5,6 +5,7 @@ import { GAME_HEIGHT } from "../config/constants.js";
 import { HubSceneWorldMixin, WORLD_W } from "./HubSceneWorld.js";
 import { HubSceneMinimapMixin } from "./HubSceneMinimap.js";
 import { HubSceneBackpackMixin } from "./HubSceneBackpack.js";
+import AudioManager from "../systems/AudioManager.js";
 
 export default class HubScene extends Phaser.Scene {
   constructor() {
@@ -46,6 +47,10 @@ export default class HubScene extends Phaser.Scene {
         this._openKeybindings();
       }
     });
+    this._audio = new AudioManager(this.game);
+    this.events.once("shutdown", () => this._audio?.destroy());
+    this._audio.startMusic("hub");
+
     this._createHubMinimap();
     this._initBackpackKey();
     this.cameras.main.fadeIn(300, 0, 0, 0);
@@ -68,6 +73,8 @@ export default class HubScene extends Phaser.Scene {
       if (dist < 48) nearNPC = npc;
     }
     if (nearNPC && Phaser.Input.Keyboard.JustDown(this._eKey)) {
+      this._audio?.play("menuClick");
+      nearNPC.showDialogueLine();
       this._onNPCInteract(nearNPC.role);
     }
   }

@@ -157,6 +157,65 @@ export const UISceneHUDMixin = {
     });
   },
 
+  _createBuffTimers() {
+    this._buffBars = {};
+    const BUFF_TYPES = [
+      { type: "speed", color: 0x44ddff, label: "SPD" },
+      { type: "strength", color: 0xff8833, label: "STR" },
+    ];
+    BUFF_TYPES.forEach(({ type, color, label }, i) => {
+      const barX = 80;
+      const barY = 48 + i * 12;
+      const barW = 50;
+      const barH = 5;
+      this.add
+        .rectangle(barX, barY, barW, barH, 0x222222)
+        .setOrigin(0, 0)
+        .setScrollFactor(0)
+        .setDepth(100);
+      const fill = this.add
+        .rectangle(barX, barY, 0, barH, color)
+        .setOrigin(0, 0)
+        .setScrollFactor(0)
+        .setDepth(101)
+        .setVisible(false);
+      const lbl = this.add
+        .bitmapText(barX + barW + 3, barY, "pixel", label, 7)
+        .setOrigin(0, 0)
+        .setTint(color)
+        .setScrollFactor(0)
+        .setDepth(101)
+        .setVisible(false);
+      this._buffBars[type] = { fill, lbl, maxW: barW, remainMs: 0, totalMs: 0 };
+    });
+  },
+
+  _onBuffStarted({ type, durationMs }) {
+    const bar = this._buffBars?.[type];
+    if (!bar) return;
+    bar.totalMs = durationMs;
+    bar.remainMs = durationMs;
+    bar.fill.width = bar.maxW;
+    bar.fill.setVisible(true);
+    bar.lbl.setVisible(true);
+  },
+
+  _updateBuffTimers() {
+    if (!this._buffBars) return;
+    const dt = this.game.loop.delta;
+    for (const bar of Object.values(this._buffBars)) {
+      if (bar.remainMs <= 0) continue;
+      bar.remainMs -= dt;
+      if (bar.remainMs <= 0) {
+        bar.remainMs = 0;
+        bar.fill.setVisible(false);
+        bar.lbl.setVisible(false);
+      } else {
+        bar.fill.width = bar.maxW * (bar.remainMs / bar.totalMs);
+      }
+    }
+  },
+
   _createAbilitySlot() {
     const SLOT_X = 80,
       SLOT_Y = 30,

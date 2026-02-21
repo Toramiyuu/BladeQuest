@@ -9,6 +9,7 @@ import BlacksmithScene from "./scenes/BlacksmithScene.js";
 import PotionShopScene from "./scenes/PotionShopScene.js";
 import GuildBoardScene from "./scenes/GuildBoardScene.js";
 import KeybindingsScene from "./scenes/KeybindingsScene.js";
+import NarrativeScene from "./scenes/NarrativeScene.js";
 
 const config = {
   type: Phaser.AUTO,
@@ -30,6 +31,7 @@ const config = {
   },
   scene: [
     BootScene,
+    NarrativeScene,
     HubScene,
     DungeonScene,
     GameScene,

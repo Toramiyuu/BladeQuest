@@ -37,6 +37,16 @@ export const PlayerCombatMixin = {
 
     this._syncStateMachineWithCombat();
 
+    if (isActive) {
+      this._trailTimer = (this._trailTimer ?? 0) + dt;
+      if (this._trailTimer >= 35) {
+        this._trailTimer = 0;
+        this._spawnTrailGhost();
+      }
+    } else {
+      this._trailTimer = 0;
+    }
+
     if (isActive !== wasActive) {
       if (isActive) {
         const attack = this._combatSystem.currentAttack;
@@ -144,6 +154,26 @@ export const PlayerCombatMixin = {
       this._flashMs = 0;
       this.setAlpha(this.alpha < 0.6 ? 1 : 0.3);
     }
+  },
+
+  /** Spawn a blue-tinted ghost afterimage at the player's current position. */
+  _spawnTrailGhost() {
+    const isHeavy = this._combatSystem.currentAttack === "heavy";
+    const ghost = this.scene.add
+      .sprite(this.x, this.y, this.texture.key, this.frame.name)
+      .setOrigin(this.originX, this.originY)
+      .setScale(this.scaleX, this.scaleY)
+      .setFlipX(this.flipX)
+      .setDepth(this.depth - 1)
+      .setAlpha(0.45)
+      .setTint(isHeavy ? 0xff8844 : 0x88aaff);
+    this.scene.tweens.add({
+      targets: ghost,
+      alpha: 0,
+      duration: 110,
+      ease: "Linear",
+      onComplete: () => ghost.destroy(),
+    });
   },
 
   /** Called from GameScene onSlimeHit overlap when air slash hits enemy. */

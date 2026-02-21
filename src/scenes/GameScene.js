@@ -192,6 +192,14 @@ export default class GameScene extends Phaser.Scene {
       this.player.body.setAcceleration(0, 0);
       this.player.setTint(0xff4444);
       this.player.setAlpha(1);
+      this._audio?.play("death");
+      this.time.timeScale = 0.2;
+      this.physics.world.timeScale = 5;
+      this.time.delayedCall(400, () => {
+        if (!this.scene?.isActive?.()) return;
+        this.time.timeScale = 1;
+        this.physics.world.timeScale = 1;
+      });
     }
     this._dyingMs -= dt;
     if (this._dyingMs <= 0) {
@@ -201,6 +209,8 @@ export default class GameScene extends Phaser.Scene {
 
   _respawnPlayer() {
     this._isDying = false;
+    this.time.timeScale = 1;
+    this.physics.world.timeScale = 1;
     this._healthSystem.reset();
     this.player.respawn(this._spawnX, this._spawnY);
     this._emitHealthChanged();

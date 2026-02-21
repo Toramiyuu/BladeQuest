@@ -89,6 +89,17 @@ export const DungeonCombatMixin = {
     const dmg = Math.ceil(base * (this.player._damageMultiplier ?? 1));
     const wasDead = enemy.isDead;
     enemy.takeDamage(dmg);
+    this._audio?.play(isHeavy ? "heavyHit" : "hit");
+    if (isHeavy) {
+      this.cameras.main.shake(200, 0.012);
+      this.tweens.add({
+        targets: this.cameras.main,
+        zoom: 1.07,
+        duration: 55,
+        yoyo: true,
+        ease: "Quad.easeOut",
+      });
+    }
     if (!wasDead && enemy.isDead) this._onEnemyDied(enemy);
     this._showDamageNumber(enemy.x, enemy.y, dmg, isHeavy);
   },
@@ -104,6 +115,7 @@ export const DungeonCombatMixin = {
     const wasDead = enemy.isDead;
     enemy.takeDamage(dmg);
     this.player.applyAirSlashBounce();
+    this._audio?.play("hit");
     if (!wasDead && enemy.isDead) this._onEnemyDied(enemy);
     this._showDamageNumber(enemy.x, enemy.y, dmg, false);
   },
@@ -115,6 +127,7 @@ export const DungeonCombatMixin = {
     this.player.takeDamage(def, enemy.x);
     if (this._healthSystem.currentHealth !== before) {
       this._emitHealthChanged();
+      this._audio?.play("playerHit");
       this.cameras.main.shake(120, 0.005);
 
       if (!this._hitStopActive) {
@@ -156,6 +169,7 @@ export const DungeonCombatMixin = {
     const wasDead = enemy.isDead;
     enemy.takeDamage(dmg);
     kunai.destroy();
+    this._audio?.play("hit");
     if (!wasDead && enemy.isDead) this._onEnemyDied(enemy);
     this._showDamageNumber(enemy.x, enemy.y, dmg, false);
   },
@@ -168,6 +182,7 @@ export const DungeonCombatMixin = {
     arrow.destroy();
     if (this._healthSystem.currentHealth !== before) {
       this._emitHealthChanged();
+      this._audio?.play("playerHit");
       this.cameras.main.shake(80, 0.004);
     }
   },
@@ -178,7 +193,10 @@ export const DungeonCombatMixin = {
     const type = enemy.enemyType ?? "skeleton";
     const drops = getDropsForEnemy(type, this._currentFloor);
 
-    if (drops.gold > 0) InventorySystem.addGold(drops.gold);
+    if (drops.gold > 0) {
+      InventorySystem.addGold(drops.gold);
+      this._audio?.play("pickup");
+    }
     if (drops.bones > 0) InventorySystem.addMaterial("bones", drops.bones);
     if (drops.crystals > 0)
       InventorySystem.addMaterial("crystals", drops.crystals);
