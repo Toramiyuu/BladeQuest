@@ -4,3 +4,4 @@ package-lock.json
 .worktrees/
 .playwright-cli/
 hub-town
+.vercel
