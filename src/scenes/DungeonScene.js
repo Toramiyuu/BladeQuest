@@ -12,6 +12,7 @@ import { DungeonEffectsMixin } from "./DungeonEffects.js";
 import AudioManager from "../systems/AudioManager.js";
 import SchoolSystem from "../systems/SchoolSystem.js";
 import GuildQuestSystem from "../systems/GuildQuestSystem.js";
+import TitleSystem from "../systems/TitleSystem.js";
 import {
   MAX_DELTA_MS,
   CAMERA_LEAD_X,
@@ -32,9 +33,19 @@ export default class DungeonScene extends Phaser.Scene {
     this._startFloor = data.startFloor || 1;
     this._currentFloor = this._startFloor;
     SchoolSystem.init(this._classId);
+    TitleSystem.init();
     if (data.freshStart) {
       const potionType = GuildQuestSystem.hasFreePotion();
       if (potionType) InventorySystem.addPotion(potionType);
+      const titleRes = TitleSystem.getStartResources();
+      if (titleRes) {
+        if (titleRes.potion)
+          InventorySystem.addPotion(titleRes.potion, titleRes.potionCount ?? 1);
+        if (titleRes.bones)
+          InventorySystem.addMaterial("bones", titleRes.bones);
+        if (titleRes.crystals)
+          InventorySystem.addMaterial("crystals", titleRes.crystals);
+      }
     }
   }
 

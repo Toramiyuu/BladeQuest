@@ -14,6 +14,7 @@
  */
 
 import SchoolSystem from "./SchoolSystem.js";
+import TitleSystem from "./TitleSystem.js";
 
 const TIER_MULT = [1.0, 1.3, 1.6, 2.0];
 
@@ -35,5 +36,8 @@ export function calculateDamage({
   const heavyMult = isHeavy ? 1.5 : 1.0;
   const classMult = classId === "knight" ? 1.2 : 1.0;
   const firstBloodMult = isFirstBlood ? SchoolSystem.getFirstBloodMult() : 1.0;
-  return Math.ceil(tierMult * heavyMult * classMult * firstBloodMult);
+  const titleMult = 1 + TitleSystem.getDamageBonus();
+  return Math.ceil(
+    tierMult * heavyMult * classMult * firstBloodMult * titleMult,
+  );
 }

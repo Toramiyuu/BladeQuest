@@ -111,6 +111,11 @@ const SchoolSystem = {
     return this._getRankIndex(this._activeSchool);
   },
 
+  /** Returns rank index for any school (used by TitleSystem unlock checks). */
+  getSchoolRankIndex(schoolId) {
+    return this._getRankIndex(schoolId);
+  },
+
   getActiveRankName() {
     const school = ALL_SCHOOLS[this._activeSchool];
     const idx = this._getRankIndex(this._activeSchool);

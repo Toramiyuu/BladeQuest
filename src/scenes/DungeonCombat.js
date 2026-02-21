@@ -16,6 +16,8 @@ import { getDropsForEnemy } from "../systems/DropSystem.js";
 import { PIXEL_FONT } from "../config/PixelFont.js";
 import GuildQuestSystem from "../systems/GuildQuestSystem.js";
 import SchoolSystem from "../systems/SchoolSystem.js";
+import SaveManager from "../systems/SaveManager.js";
+import TitleSystem from "../systems/TitleSystem.js";
 
 export const DungeonCombatMixin = {
   _setupOverlaps() {
@@ -208,7 +210,10 @@ export const DungeonCombatMixin = {
     const drops = getDropsForEnemy(type, this._currentFloor);
 
     if (drops.gold > 0) {
-      InventorySystem.addGold(drops.gold);
+      const goldBonus = TitleSystem.getGoldBonus();
+      const gold =
+        goldBonus > 0 ? Math.round(drops.gold * (1 + goldBonus)) : drops.gold;
+      InventorySystem.addGold(gold);
       this._audio?.play("pickup");
     }
     if (drops.bones > 0) InventorySystem.addMaterial("bones", drops.bones);
@@ -218,10 +223,12 @@ export const DungeonCombatMixin = {
       InventorySystem.addMaterial("essence", drops.essence);
 
     if (this._runStats) this._runStats.kills++;
+    SaveManager.incrementKills();
     GuildQuestSystem.advanceKillQuest(type, 1);
     GuildQuestSystem.checkCollectionQuests(
       InventorySystem.getInventory().materials,
     );
+    TitleSystem.checkUnlocks();
     this._showDropText(enemy.x, enemy.y, drops);
     this._spawnDeathParticles(enemy.x, enemy.y);
   },

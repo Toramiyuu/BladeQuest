@@ -12,6 +12,8 @@ import SkeletonWarrior from "../entities/SkeletonWarrior.js";
 import ArcherGoblin from "../entities/ArcherGoblin.js";
 import HealthSystem from "../systems/HealthSystem.js";
 import GuildQuestSystem from "../systems/GuildQuestSystem.js";
+import TitleSystem from "../systems/TitleSystem.js";
+import SaveManager from "../systems/SaveManager.js";
 
 const TILE_SIZE = 16;
 
@@ -99,7 +101,10 @@ export const DungeonFloorMixin = {
       this.player.respawn(px, py);
     } else {
       this.player = new Player(this, px, py, this._classConfig);
-      this._healthSystem = new HealthSystem(this._classConfig.stats.maxHealth);
+      const baseHP = this._classConfig.stats.maxHealth;
+      const hpBonus = TitleSystem.getHPBonus();
+      const maxHP = hpBonus > 0 ? Math.ceil(baseHP * (1 + hpBonus)) : baseHP;
+      this._healthSystem = new HealthSystem(maxHP);
       this._healthSystem.grantInvulnerability();
       this.player.healthSystem = this._healthSystem;
     }
@@ -232,7 +237,9 @@ export const DungeonFloorMixin = {
   _advanceFloor() {
     this._audio?.play("floorClear");
     this._currentFloor++;
+    SaveManager.recordFloor(this._currentFloor);
     GuildQuestSystem.advanceExploreQuest(this._currentFloor);
+    TitleSystem.checkUnlocks();
     this._emitFloorChanged();
     this.enemyGroup.clear(true, true);
     this.kunaiGroup.clear(true, true);

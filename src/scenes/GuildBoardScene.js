@@ -6,6 +6,7 @@ import { buildQuestBoard } from "./GuildQuestBoard.js";
 import { buildDropTrading } from "./GuildDropTrading.js";
 import { buildBossFloors } from "./GuildBossFloors.js";
 import { buildRankInfo } from "./GuildRankInfo.js";
+import { buildGuildTitles } from "./GuildTitles.js";
 import { buildCheckpoints } from "./GuildCheckpoints.js";
 import { PIXEL_FONT } from "../config/PixelFont.js";
 
@@ -119,6 +120,11 @@ export default class GuildBoardScene extends Phaser.Scene {
     this._rankTabObjects = this.children.list.slice(rBefore);
     for (const obj of this._rankTabObjects) obj.setVisible(false);
 
+    const tBefore = this.children.list.length;
+    buildGuildTitles(this, PX, PW, PY);
+    this._titlesTabObjects = this.children.list.slice(tBefore);
+    for (const obj of this._titlesTabObjects) obj.setVisible(false);
+
     this._activeTab = "quests";
 
     bt(this, CX, PY + PH - 2, "ESC to close", 8, 0x555555, 0.5, 1);
@@ -143,15 +149,16 @@ export default class GuildBoardScene extends Phaser.Scene {
 
   _buildTabs() {
     const defs = [
-      { key: "quests", label: "QUESTS", x: CX - 90 },
-      { key: "bosses", label: "BOSS FLOORS", x: CX },
-      { key: "rank", label: "RANK", x: CX + 88 },
+      { key: "quests", label: "QUESTS", x: 126 },
+      { key: "bosses", label: "BOSSES", x: 202 },
+      { key: "rank", label: "RANK", x: 278 },
+      { key: "titles", label: "TITLES", x: 354 },
     ];
     this._tabBtns = {};
     defs.forEach(({ key, label, x }) => {
       const active = key === "quests";
       const btn = this.add
-        .rectangle(x, TAB_Y, 90, 10, active ? 0x223355 : 0x111133)
+        .rectangle(x, TAB_Y, 68, 10, active ? 0x223355 : 0x111133)
         .setStrokeStyle(active ? 2 : 1, active ? 0x4499ff : 0x334466)
         .setScrollFactor(0)
         .setDepth(D)
@@ -178,6 +185,7 @@ export default class GuildBoardScene extends Phaser.Scene {
     const showQuests = key === "quests";
     const showBosses = key === "bosses";
     const showRank = key === "rank";
+    const showTitles = key === "titles";
 
     for (const obj of this._questTabObjects) {
       if (obj?.active) obj.setVisible(showQuests);
@@ -190,6 +198,9 @@ export default class GuildBoardScene extends Phaser.Scene {
     }
     for (const obj of this._rankTabObjects ?? []) {
       if (obj?.active) obj.setVisible(showRank);
+    }
+    for (const obj of this._titlesTabObjects ?? []) {
+      if (obj?.active) obj.setVisible(showTitles);
     }
 
     for (const [k, { btn, txt }] of Object.entries(this._tabBtns)) {

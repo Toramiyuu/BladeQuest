@@ -148,6 +148,46 @@ const SaveManager = {
     data.guild = guildData;
     this.save(data);
   },
+
+  /** Increment persistent kill counter by n (default 1). */
+  incrementKills(n = 1) {
+    const data = this.load();
+    data.totalKills = (data.totalKills ?? 0) + n;
+    this.save(data);
+  },
+
+  getTotalKills() {
+    return this.load().totalKills ?? 0;
+  },
+
+  /** Update highestFloor if floor is greater (called on every floor advance). */
+  recordFloor(floor) {
+    const data = this.load();
+    if (floor > (data.highestFloor ?? 0)) {
+      data.highestFloor = floor;
+      this.save(data);
+    }
+  },
+
+  getEarnedTitles() {
+    return this.load().earnedTitles ?? [];
+  },
+
+  saveEarnedTitles(ids) {
+    const data = this.load();
+    data.earnedTitles = ids;
+    this.save(data);
+  },
+
+  getEquippedTitle() {
+    return this.load().equippedTitle ?? null;
+  },
+
+  saveEquippedTitle(id) {
+    const data = this.load();
+    data.equippedTitle = id;
+    this.save(data);
+  },
 };
 
 export default SaveManager;
