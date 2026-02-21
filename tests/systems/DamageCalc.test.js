@@ -14,6 +14,22 @@ describe("DamageCalc", () => {
     it("tier 2 deals 2 damage (shinobi, no heavy)", () => {
       expect(calculateDamage({ weaponTier: 2 })).toBe(2);
     });
+
+    it("tier 3 (Void Edge) deals 2 damage (shinobi, no heavy)", () => {
+      expect(calculateDamage({ weaponTier: 3 })).toBe(2);
+    });
+
+    it("tier 3 knight normal deals 3 damage", () => {
+      expect(calculateDamage({ weaponTier: 3, classId: "knight" })).toBe(3);
+    });
+
+    it("tier 3 shinobi heavy deals 3 damage", () => {
+      expect(calculateDamage({ weaponTier: 3, isHeavy: true })).toBe(3);
+    });
+
+    it("tier 3 knight heavy deals 4 damage", () => {
+      expect(calculateDamage({ weaponTier: 3, classId: "knight", isHeavy: true })).toBe(4);
+    });
   });
 
   describe("heavy attack", () => {

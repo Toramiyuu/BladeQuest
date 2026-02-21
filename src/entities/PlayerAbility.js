@@ -37,7 +37,84 @@ export const PlayerAbilityMixin = {
       if (this.scene.kunaiGroup) this.scene.kunaiGroup.add(kunai);
     } else if (abilityId === "holy-slash") {
       this._executeHolySlash();
+    } else if (abilityId === "blink") {
+      this._executeBlink();
+    } else if (abilityId === "burst") {
+      this._executeArcanesBurst();
+    } else if (abilityId === "rage") {
+      this._executeRage();
     }
+  },
+
+  _executeBlink() {
+    const dx = this.facing * 64;
+    this.setPosition(this.x + dx, this.y);
+    this.setTint(0xaa44ff);
+    const flash = this.scene.add
+      .rectangle(this.x - dx * 0.5, this.y, Math.abs(dx), 20, 0xaa44ff, 0.45)
+      .setDepth(15);
+    this.scene.tweens.add({
+      targets: flash,
+      alpha: 0,
+      scaleX: 1.5,
+      duration: 180,
+      ease: "Quad.easeOut",
+      onComplete: () => flash.destroy(),
+    });
+    this.scene.time.delayedCall(160, () => this.clearTint());
+  },
+
+  _executeArcanesBurst() {
+    const hb = this.groundHitbox;
+    hb.body.enable = true;
+    hb.body.setSize(120, 80);
+    hb.setPosition(this.x + this.facing * 40, this.y);
+    this.setTint(0x8844ff);
+    this.hitEnemies.clear();
+
+    const flash = this.scene.add
+      .rectangle(this.x + this.facing * 40, this.y, 120, 80, 0x8844ff, 0.45)
+      .setDepth(15);
+    this.scene.tweens.add({
+      targets: flash,
+      alpha: 0,
+      scaleX: 1.8,
+      scaleY: 1.4,
+      duration: 280,
+      ease: "Quad.easeOut",
+      onComplete: () => flash.destroy(),
+    });
+    this.scene.time.delayedCall(220, () => {
+      hb.body.enable = false;
+      this.clearTint();
+    });
+  },
+
+  _executeRage() {
+    const hb = this.groundHitbox;
+    hb.body.enable = true;
+    hb.body.setSize(80, 64);
+    hb.setPosition(this.x + this.facing * 24, this.y);
+    this.setTint(0xff4422);
+    this.hitEnemies.clear();
+
+    const flash = this.scene.add
+      .rectangle(this.x + this.facing * 24, this.y, 80, 64, 0xff4422, 0.5)
+      .setDepth(15);
+    this.scene.tweens.add({
+      targets: flash,
+      alpha: 0,
+      scaleX: 1.5,
+      duration: 250,
+      ease: "Quad.easeOut",
+      onComplete: () => flash.destroy(),
+    });
+    this.scene.time.delayedCall(180, () => {
+      hb.body.enable = false;
+      this.scene.time.delayedCall(2000, () => {
+        if (this.active) this.clearTint();
+      });
+    });
   },
 
   _executeHolySlash() {

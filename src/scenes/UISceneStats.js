@@ -12,10 +12,10 @@ import ClassRegistry from "../config/classes.js";
 import { GAME_WIDTH, GAME_HEIGHT } from "../config/constants.js";
 import { PIXEL_FONT } from "../config/PixelFont.js";
 
-/** Damage per weapon tier (tier 0 = base 1). */
-const WEAPON_DAMAGE = [1, 2, 3];
-/** Armour reduction per tier as a percent string. */
-const ARMOR_REDUCTION = ["0%", "15%", "28%"];
+/** Damage multiplier label per weapon tier (matches DamageCalc TIER_MULT). */
+const WEAPON_MULT = ["1.0×", "1.3×", "1.6×", "2.0×"];
+/** Armour damage reduction per tier (matches DefenseCalc REDUCTION). */
+const ARMOR_REDUCTION = ["0%", "20%", "35%", "50%"];
 
 export const UISceneStatsMixin = {
   _initStatsKeys() {
@@ -81,7 +81,7 @@ export const UISceneStatsMixin = {
       null,
       {
         label: "SWORD TIER",
-        value: `${wTier}  (${WEAPON_DAMAGE[wTier] ?? wTier + 1} dmg)`,
+        value: `${wTier}  (${WEAPON_MULT[wTier] ?? "??"})`,
       },
       {
         label: "ARMOR TIER",

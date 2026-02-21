@@ -36,7 +36,8 @@ const PLAYER_SCALE = 0.35;
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, classConfig = null) {
-    super(scene, x, y, "player-idle", 0);
+    const initTexture = classConfig?.spriteKeys?.idle ?? "player-idle";
+    super(scene, x, y, initTexture, 0);
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
@@ -135,33 +136,32 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   _setupStateMachine() {
     const sm = this._stateMachine;
+    const sk = this.classConfig?.spriteKeys ?? {};
 
     sm.addState("idle", {
-      enter: () => this._playAnim("player-idle"),
+      enter: () => this._playAnim(sk.idle ?? "player-idle"),
     });
-    sm.addState("run", {
-      enter: () => this._playAnim("player-run"),
-    });
+    sm.addState("run", { enter: () => this._playAnim(sk.run ?? "player-run") });
     sm.addState("jump", {
-      enter: () => this._playAnim("player-jump-up"),
+      enter: () => this._playAnim(sk.jump ?? "player-jump-up"),
     });
     sm.addState("fall", {
-      enter: () => this._playAnim("player-fall"),
+      enter: () => this._playAnim(sk.fall ?? "player-fall"),
     });
     sm.addState("attack1", {
-      enter: () => this._playAnim("player-attack1"),
+      enter: () => this._playAnim(sk.attack1 ?? "player-attack1"),
     });
     sm.addState("attack2", {
-      enter: () => this._playAnim("player-attack1"),
+      enter: () => this._playAnim(sk.attack1 ?? "player-attack1"),
     });
     sm.addState("attack3", {
-      enter: () => this._playAnim("player-attack2"),
+      enter: () => this._playAnim(sk.attack2 ?? "player-attack2"),
     });
     sm.addState("air_attack", {
-      enter: () => this._playAnim("player-attack1"),
+      enter: () => this._playAnim(sk.attack1 ?? "player-attack1"),
     });
     sm.addState("roll", {
-      enter: () => this._playAnim("player-run"),
+      enter: () => this._playAnim(sk.run ?? "player-run"),
     });
   }
 

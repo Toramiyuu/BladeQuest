@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import ClassRegistry from "../config/classes.js";
 import DungeonGenerator from "../systems/DungeonGenerator.js";
+import InventorySystem from "../systems/InventorySystem.js";
 import { createAnimations } from "../config/animations.js";
 import { DungeonFloorMixin } from "./DungeonFloor.js";
 import { DungeonCombatMixin } from "./DungeonCombat.js";
@@ -36,6 +37,7 @@ export default class DungeonScene extends Phaser.Scene {
     this.player = null;
     this.enemyGroup = null;
     this.kunaiGroup = null;
+    this.arrowGroup = null;
     this._buildFloor();
     this._setupCamera();
 
@@ -46,6 +48,9 @@ export default class DungeonScene extends Phaser.Scene {
     this._bossDefeated = false;
     this._bossWarningShown = false;
 
+    const startGold = InventorySystem.getInventory().gold;
+    this._runStats = { kills: 0, goldStart: startGold };
+
     this.add
       .image(240, 135, "vignette-overlay")
       .setScrollFactor(0)
@@ -54,6 +59,16 @@ export default class DungeonScene extends Phaser.Scene {
     this.scene.launch("UIScene");
     this._emitFloorChanged();
     this._setupPotionKeys();
+    this.input.keyboard.on("keydown", (e) => {
+      if (
+        e.keyCode === Phaser.Input.Keyboard.KeyCodes.H ||
+        e.keyCode === Phaser.Input.Keyboard.KeyCodes.F1
+      ) {
+        if (!this.scene.isActive("KeybindingsScene")) {
+          this.scene.launch("KeybindingsScene");
+        }
+      }
+    });
     this.cameras.main.fadeIn(400, 0, 0, 0);
   }
 
@@ -119,7 +134,7 @@ export default class DungeonScene extends Phaser.Scene {
         enemy.destroy();
         return;
       }
-      enemy.update(_time, dt);
+      enemy.update(_time, dt, this.player);
     });
 
     this._emitManaChanged();

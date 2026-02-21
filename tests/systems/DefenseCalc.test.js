@@ -13,8 +13,19 @@ describe("DefenseCalc", () => {
     expect(calculateIncoming(5, 1)).toBe(4);
   });
 
+  it("tier 2 (knight plate) reduces damage by 35%", () => {
+    expect(calculateIncoming(4, 2)).toBe(3);
+    expect(calculateIncoming(10, 2)).toBe(7);
+  });
+
+  it("tier 3 (sacred armor) reduces damage by 50%", () => {
+    expect(calculateIncoming(4, 3)).toBe(2);
+    expect(calculateIncoming(10, 3)).toBe(5);
+  });
+
   it("minimum damage is always 1", () => {
     expect(calculateIncoming(1, 1)).toBe(1);
+    expect(calculateIncoming(1, 3)).toBe(1);
     expect(calculateIncoming(1, 0)).toBe(1);
   });
 
@@ -24,5 +35,7 @@ describe("DefenseCalc", () => {
 
   it("returns an integer", () => {
     expect(Number.isInteger(calculateIncoming(3, 1))).toBe(true);
+    expect(Number.isInteger(calculateIncoming(4, 2))).toBe(true);
+    expect(Number.isInteger(calculateIncoming(4, 3))).toBe(true);
   });
 });

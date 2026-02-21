@@ -22,6 +22,12 @@ const DEFAULT_INVENTORY = {
   potionCounts: { health: 0, speed: 0, strength: 0 },
 };
 
+const DEFAULT_GUILD = {
+  reputation: 0,
+  questsCompleted: 0,
+  activeQuests: [],
+};
+
 const SaveManager = {
   _saveListeners: [],
 
@@ -121,6 +127,25 @@ const SaveManager = {
   resetInventory() {
     const data = this.load();
     delete data.inventory;
+    this.save(data);
+  },
+
+  /** Returns guild state, merging with defaults for backward compatibility. */
+  getGuild() {
+    const data = this.load();
+    return {
+      ...DEFAULT_GUILD,
+      ...(data.guild ?? {}),
+      activeQuests: Array.isArray(data.guild?.activeQuests)
+        ? data.guild.activeQuests
+        : [],
+    };
+  },
+
+  /** Persists guild state under the save's `guild` key. */
+  saveGuild(guildData) {
+    const data = this.load();
+    data.guild = guildData;
     this.save(data);
   },
 };

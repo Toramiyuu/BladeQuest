@@ -45,6 +45,7 @@ export const UISceneMinimapMixin = {
 
     if (!rooms || width === 0 || height === 0) return;
     this._mmDrawRooms();
+    this._updateRoomProgress();
   },
 
   _mmDrawRooms() {
@@ -100,6 +101,7 @@ export const UISceneMinimapMixin = {
       if (this._mmCurrentRoom >= 0) this._mmVisited.add(this._mmCurrentRoom);
       this._mmCurrentRoom = currentRoom;
       this._mmDrawRooms();
+      this._updateRoomProgress();
     }
 
     this._mmPlayer.fillStyle(0x88ff88, 1);

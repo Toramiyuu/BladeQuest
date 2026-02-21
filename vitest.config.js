@@ -4,7 +4,11 @@ import path from "path";
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["tests/systems/**/*.test.js", "tests/config/**/*.test.js"],
+    include: [
+      "tests/systems/**/*.test.js",
+      "tests/config/**/*.test.js",
+      "tests/scenes/**/*.test.js",
+    ],
   },
   resolve: {
     alias: {

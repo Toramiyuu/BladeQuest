@@ -1,8 +1,10 @@
 /**
  * UISceneHUD — core HUD display methods mixed into UIScene prototype.
  *
- * Handles: hearts, mana bar, floor text, ability slot, potion slots.
+ * Handles: hearts, mana bar, floor text, room progress, ability slot, potion slots.
  * Applied via Object.assign(UIScene.prototype, UISceneHUDMixin).
+ *
+ * Note: floor entry card and boss warning overlays live in UISceneOverlays.
  */
 
 import {
@@ -42,6 +44,27 @@ export const UISceneHUDMixin = {
       .setTint(0xcccccc)
       .setScrollFactor(0)
       .setDepth(100);
+  },
+
+  _createRoomProgress() {
+    this._roomProgressText = this.add
+      .bitmapText(GAME_WIDTH - 8, 18, PIXEL_FONT, "", 8)
+      .setOrigin(1, 0)
+      .setTint(0xaaaaaa)
+      .setScrollFactor(0)
+      .setDepth(100);
+  },
+
+  _updateRoomProgress() {
+    if (!this._roomProgressText) return;
+    const total = this._mmLayout?.rooms?.length ?? 0;
+    const room = this._mmCurrentRoom ?? -1;
+    if (total <= 0) {
+      this._roomProgressText.setText("");
+      return;
+    }
+    const label = room >= 0 ? `Room ${room + 1}/${total}` : `?/${total}`;
+    this._roomProgressText.setText(label);
   },
 
   /** Lazily build or rebuild heart images when max changes. */
@@ -97,73 +120,6 @@ export const UISceneHUDMixin = {
   _updateManaBar() {
     if (!this._manaFill || this._manaTarget === undefined) return;
     this._manaFill.width += (this._manaTarget - this._manaFill.width) * 0.15;
-  },
-
-  _onFloorChanged(floor) {
-    if (this._floorText) {
-      this._floorText.setText(`Floor ${floor}`);
-    }
-
-    if (this._floorCard) {
-      this._floorCard.destroy();
-      this._floorCard = null;
-    }
-    const card = this.add
-      .bitmapText(240, 135, PIXEL_FONT, `FLOOR ${floor}`, 16)
-      .setOrigin(0.5)
-      .setTint(0xffcc44)
-      .setScrollFactor(0)
-      .setDepth(150)
-      .setAlpha(0)
-      .setScale(0.5);
-    this._floorCard = card;
-
-    this.tweens.chain({
-      targets: card,
-      tweens: [
-        { alpha: 1, scaleX: 1, scaleY: 1, duration: 300, ease: "Quad.easeOut" },
-        { alpha: 1, duration: 800 },
-        {
-          alpha: 0,
-          y: 115,
-          duration: 400,
-          onComplete: () => {
-            card.destroy();
-            if (this._floorCard === card) this._floorCard = null;
-          },
-        },
-      ],
-    });
-  },
-
-  _onBossWarning() {
-    const flash = this.add
-      .rectangle(240, 135, 480, 270, 0xffffff, 0.6)
-      .setScrollFactor(0)
-      .setDepth(196);
-    this.tweens.add({
-      targets: flash,
-      alpha: 0,
-      duration: 200,
-      onComplete: () => flash.destroy(),
-    });
-
-    const txt = this.add
-      .bitmapText(240, 135, PIXEL_FONT, "WARNING", 16)
-      .setOrigin(0.5)
-      .setTint(0xff4444)
-      .setScrollFactor(0)
-      .setDepth(197)
-      .setAlpha(0)
-      .setScale(2);
-    this.tweens.chain({
-      targets: txt,
-      tweens: [
-        { alpha: 1, scaleX: 1, scaleY: 1, duration: 200, ease: "Quad.easeOut" },
-        { alpha: 1, duration: 600 },
-        { alpha: 0, duration: 300, onComplete: () => txt.destroy() },
-      ],
-    });
   },
 
   _createPotionSlots() {

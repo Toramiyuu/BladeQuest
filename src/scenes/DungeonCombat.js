@@ -4,12 +4,17 @@
  * Applied via Object.assign(DungeonScene.prototype, DungeonCombatMixin).
  */
 
-import { HEAVY_KNOCKBACK_X, SLIME_DAMAGE } from "../config/constants.js";
+import {
+  HEAVY_KNOCKBACK_X,
+  SLIME_DAMAGE,
+  ARROW_DAMAGE,
+} from "../config/constants.js";
 import InventorySystem from "../systems/InventorySystem.js";
 import { calculateDamage } from "../systems/DamageCalc.js";
 import { calculateIncoming } from "../systems/DefenseCalc.js";
 import { getDropsForEnemy } from "../systems/DropSystem.js";
 import { PIXEL_FONT } from "../config/PixelFont.js";
+import GuildQuestSystem from "../systems/GuildQuestSystem.js";
 
 export const DungeonCombatMixin = {
   _setupOverlaps() {
@@ -56,6 +61,17 @@ export const DungeonCombatMixin = {
         this,
       ),
     );
+    if (this.arrowGroup) {
+      this._trackCollider(
+        this.physics.add.overlap(
+          this.arrowGroup,
+          this.player,
+          this._onArrowHitPlayer,
+          null,
+          this,
+        ),
+      );
+    }
   },
 
   _onGroundSlashHit(_hitbox, enemy) {
@@ -144,6 +160,18 @@ export const DungeonCombatMixin = {
     this._showDamageNumber(enemy.x, enemy.y, dmg, false);
   },
 
+  _onArrowHitPlayer(arrow, _player) {
+    if (!arrow.active) return;
+    const before = this._healthSystem.currentHealth;
+    const dmg = calculateIncoming(ARROW_DAMAGE, this.player._armorTier ?? 0);
+    this.player.takeDamage(dmg, arrow.x);
+    arrow.destroy();
+    if (this._healthSystem.currentHealth !== before) {
+      this._emitHealthChanged();
+      this.cameras.main.shake(80, 0.004);
+    }
+  },
+
   /** Called when an enemy transitions from alive → dead. Awards drops and shows floating text. */
   _onEnemyDied(enemy) {
     if (enemy === this._boss) return;
@@ -157,6 +185,11 @@ export const DungeonCombatMixin = {
     if (drops.essence > 0)
       InventorySystem.addMaterial("essence", drops.essence);
 
+    if (this._runStats) this._runStats.kills++;
+    GuildQuestSystem.advanceKillQuest(type, 1);
+    GuildQuestSystem.checkCollectionQuests(
+      InventorySystem.getInventory().materials,
+    );
     this._showDropText(enemy.x, enemy.y, drops);
   },
 

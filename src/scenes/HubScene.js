@@ -38,6 +38,14 @@ export default class HubScene extends Phaser.Scene {
       .setDepth(45);
 
     this._eKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+    this.input.keyboard.on("keydown", (e) => {
+      if (
+        e.keyCode === Phaser.Input.Keyboard.KeyCodes.H ||
+        e.keyCode === Phaser.Input.Keyboard.KeyCodes.F1
+      ) {
+        this._openKeybindings();
+      }
+    });
     this._createHubMinimap();
     this._initBackpackKey();
     this.cameras.main.fadeIn(300, 0, 0, 0);
@@ -73,6 +81,7 @@ export default class HubScene extends Phaser.Scene {
         blacksmith: "BlacksmithScene",
         merchant: "PotionShopScene",
         guild: "GuildBoardScene",
+        keybindings: "KeybindingsScene",
       };
       const sceneKey = keyMap[role];
       if (sceneKey && !this.scene.isActive(sceneKey)) {
@@ -82,6 +91,12 @@ export default class HubScene extends Phaser.Scene {
           this.scene.pause("HubScene");
         });
       }
+    }
+  }
+
+  _openKeybindings() {
+    if (!this.scene.isActive("KeybindingsScene")) {
+      this.scene.launch("KeybindingsScene");
     }
   }
 

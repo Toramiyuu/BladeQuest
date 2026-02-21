@@ -23,18 +23,48 @@ describe("ClassRegistry", () => {
       expect(knight.ability.id).toBe("holy-slash");
     });
 
+    it("returns rogue config", () => {
+      const rogue = ClassRegistry.getClass("rogue");
+      expect(rogue).toBeDefined();
+      expect(rogue.id).toBe("rogue");
+      expect(rogue.stats.maxHealth).toBe(3);
+      expect(rogue.stats.maxMana).toBe(80);
+      expect(rogue.ability.id).toBe("blink");
+    });
+
+    it("returns mage config", () => {
+      const mage = ClassRegistry.getClass("mage");
+      expect(mage).toBeDefined();
+      expect(mage.id).toBe("mage");
+      expect(mage.stats.maxHealth).toBe(4);
+      expect(mage.stats.maxMana).toBe(120);
+      expect(mage.ability.id).toBe("burst");
+    });
+
+    it("returns berserker config", () => {
+      const berserker = ClassRegistry.getClass("berserker");
+      expect(berserker).toBeDefined();
+      expect(berserker.id).toBe("berserker");
+      expect(berserker.stats.maxHealth).toBe(5);
+      expect(berserker.stats.maxMana).toBe(60);
+      expect(berserker.ability.id).toBe("rage");
+    });
+
     it("returns undefined for unknown class", () => {
       expect(ClassRegistry.getClass("wizard")).toBeUndefined();
     });
   });
 
   describe("getAllClasses()", () => {
-    it("returns array of both classes", () => {
+    it("returns array of all 5 classes", () => {
       const all = ClassRegistry.getAllClasses();
-      expect(all).toHaveLength(2);
+      expect(all).toHaveLength(5);
       const ids = all.map((c) => c.id);
       expect(ids).toContain("shinobi");
       expect(ids).toContain("knight");
+      expect(ids).toContain("rogue");
+      expect(ids).toContain("mage");
+      expect(ids).toContain("berserker");
     });
   });
 

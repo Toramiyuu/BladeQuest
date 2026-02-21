@@ -1,7 +1,7 @@
 /**
  * UISceneOverlays — modal/toast overlay methods mixed into UIScene prototype.
  *
- * Handles: save confirmation toast, future stats panel, keybinding help.
+ * Handles: save confirmation toast, floor entry card, boss warning, keybinding help.
  * Applied via Object.assign(UIScene.prototype, UISceneOverlaysMixin).
  */
 
@@ -32,6 +32,92 @@ const HELP_ROWS = [
 ];
 
 export const UISceneOverlaysMixin = {
+  _onFloorChanged(floor) {
+    if (this._floorText) {
+      this._floorText.setText(`Floor ${floor}`);
+    }
+
+    if (this._floorCard) {
+      this._floorCard.destroy();
+      this._floorCard = null;
+    }
+    const card = this.add
+      .bitmapText(240, 135, PIXEL_FONT, `FLOOR ${floor}`, 16)
+      .setOrigin(0.5)
+      .setTint(0xffcc44)
+      .setScrollFactor(0)
+      .setDepth(150)
+      .setAlpha(0)
+      .setScale(0.5);
+    this._floorCard = card;
+
+    this.tweens.chain({
+      targets: card,
+      tweens: [
+        { alpha: 1, scaleX: 1, scaleY: 1, duration: 300, ease: "Quad.easeOut" },
+        { alpha: 1, duration: 800 },
+        {
+          alpha: 0,
+          y: 115,
+          duration: 400,
+          onComplete: () => {
+            card.destroy();
+            if (this._floorCard === card) this._floorCard = null;
+          },
+        },
+      ],
+    });
+  },
+
+  _onBossWarning(data) {
+    const flash = this.add
+      .rectangle(240, 135, 480, 270, 0xffffff, 0.6)
+      .setScrollFactor(0)
+      .setDepth(196);
+    this.tweens.add({
+      targets: flash,
+      alpha: 0,
+      duration: 200,
+      onComplete: () => flash.destroy(),
+    });
+
+    const txt = this.add
+      .bitmapText(240, 128, PIXEL_FONT, "WARNING", 16)
+      .setOrigin(0.5)
+      .setTint(0xff4444)
+      .setScrollFactor(0)
+      .setDepth(197)
+      .setAlpha(0)
+      .setScale(2);
+    this.tweens.chain({
+      targets: txt,
+      tweens: [
+        { alpha: 1, scaleX: 1, scaleY: 1, duration: 200, ease: "Quad.easeOut" },
+        { alpha: 1, duration: 600 },
+        { alpha: 0, duration: 300, onComplete: () => txt.destroy() },
+      ],
+    });
+
+    const bossName = data?.bossName;
+    if (bossName) {
+      const nameTxt = this.add
+        .bitmapText(240, 148, PIXEL_FONT, bossName, 8)
+        .setOrigin(0.5)
+        .setTint(0xff8888)
+        .setScrollFactor(0)
+        .setDepth(197)
+        .setAlpha(0);
+      this.tweens.chain({
+        targets: nameTxt,
+        tweens: [
+          { alpha: 1, duration: 200, ease: "Quad.easeOut" },
+          { alpha: 1, duration: 600 },
+          { alpha: 0, duration: 300, onComplete: () => nameTxt.destroy() },
+        ],
+      });
+    }
+  },
+
   _initHelpKeys() {
     const kH = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H);
     const kF1 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F1);

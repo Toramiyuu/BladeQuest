@@ -4,26 +4,29 @@
  * Produces procedural floor layouts for the dungeon.
  * Output is a data object consumed by DungeonScene to build a Phaser tilemap.
  *
- * Tile IDs: 0=empty, 1=ground (solid), 2=platform (one-way)
+ * Tile-building helpers live in DungeonTileBuilder.js.
  */
 
-const TILE_EMPTY = 0;
-const TILE_GROUND = 1;
-
-const ROOM_MIN_W = 14;
-const ROOM_MAX_W = 22;
-const ROOM_MIN_H = 8;
-const ROOM_MAX_H = 12;
-const CORRIDOR_HEIGHT = 3;
-const ROOM_GAP_X = 6;
-const PADDING = 2;
-const PLATFORM_MIN_W = 4;
-const PLATFORM_MAX_W = 8;
-
-const BOSS_ROOM_W = 40;
-const BOSS_ROOM_H = 15;
+import {
+  TILE_EMPTY,
+  TILE_GROUND,
+  ROOM_MIN_W,
+  ROOM_MAX_W,
+  ROOM_MIN_H,
+  ROOM_MAX_H,
+  ROOM_GAP_X,
+  PADDING,
+  CORRIDOR_HEIGHT,
+  BOSS_ROOM_W,
+  BOSS_ROOM_H,
+  fillFloor,
+  buildSteppedCorridor,
+  addPlatforms,
+} from "./DungeonTileBuilder.js";
 
 const BAT_MIN_FLOOR = 3;
+const WARRIOR_MIN_FLOOR = 11;
+const ARCHER_MIN_FLOOR = 21;
 const BASE_ENEMIES_PER_ROOM = 2;
 const ENEMIES_ROOM_SCALE = 2;
 const MAX_RETRIES = 3;
@@ -32,42 +35,23 @@ function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function fillFloor(tiles, room) {
-  const floorRow1 = room.y + room.h - 2;
-  const floorRow2 = room.y + room.h - 1;
-  for (let c = room.x; c < room.x + room.w; c++) {
-    tiles[floorRow1][c] = TILE_GROUND;
-    tiles[floorRow2][c] = TILE_GROUND;
+function _pickEnemyType(floor) {
+  const r = Math.random();
+  if (floor >= ARCHER_MIN_FLOOR) {
+    if (r < 0.25) return "archer";
+    if (r < 0.5) return "skeleton-warrior";
+    if (r < 0.7) return "bat";
+    return "skeleton";
   }
-}
-
-function buildSteppedCorridor(tiles, startX, endX, aFloor, bFloor, maxRow) {
-  const totalCols = endX - startX;
-  if (totalCols <= 0) return;
-  let curY = aFloor;
-  for (let c = startX; c < endX; c++) {
-    const t = totalCols > 1 ? (c - startX) / (totalCols - 1) : 1;
-    const targetY = Math.round(aFloor + t * (bFloor - aFloor));
-    if (targetY < curY) curY = Math.max(targetY, curY - 1);
-    else if (targetY > curY) curY = Math.min(targetY, curY + 1);
-    if (curY >= 0 && curY < maxRow) tiles[curY][c] = TILE_GROUND;
-    if (curY + 1 >= 0 && curY + 1 < maxRow) tiles[curY + 1][c] = TILE_GROUND;
+  if (floor >= WARRIOR_MIN_FLOOR) {
+    if (r < 0.35) return "skeleton-warrior";
+    if (r < 0.6) return "bat";
+    return "skeleton";
   }
-}
-
-function addPlatforms(tiles, room, totalHeight) {
-  const count = randInt(1, 3);
-  for (let p = 0; p < count; p++) {
-    const pw = randInt(PLATFORM_MIN_W, PLATFORM_MAX_W);
-    const maxX = room.x + room.w - pw - 2;
-    if (maxX <= room.x + 2) continue;
-    const px = randInt(room.x + 2, maxX);
-    const py = room.y + randInt(3, room.h - 5);
-    if (py < 0 || py >= totalHeight) continue;
-    for (let c = px; c < px + pw && c < room.x + room.w - 1; c++) {
-      tiles[py][c] = TILE_GROUND;
-    }
+  if (floor >= BAT_MIN_FLOOR) {
+    return r < 0.4 ? "bat" : "skeleton";
   }
+  return "skeleton";
 }
 
 function generateNormalFloor(floor) {
@@ -127,8 +111,7 @@ function generateNormalFloor(floor) {
 
   for (const room of enemyRooms) {
     for (let i = 0; i < enemiesPerRoom; i++) {
-      const type =
-        floor >= BAT_MIN_FLOOR && Math.random() < 0.4 ? "bat" : "skeleton";
+      const type = _pickEnemyType(floor);
       const spawnY =
         type === "bat" ? room.y + Math.floor(room.h / 2) : room.y + room.h - 3;
       enemies.push({
@@ -219,8 +202,8 @@ const DungeonGenerator = {
     const floorRow1 = r1.y + r1.h - 2;
     const floorRow2 = r1.y + r1.h - 1;
     for (let x = r1.x + r1.w; x < r2.x; x++) {
-      groundTiles[floorRow1][x] = 1;
-      groundTiles[floorRow2][x] = 1;
+      groundTiles[floorRow1][x] = TILE_GROUND;
+      groundTiles[floorRow2][x] = TILE_GROUND;
     }
     const hpMultiplier = 1 + Math.floor(floor / 10);
     const enemies = [

@@ -8,7 +8,10 @@
 import Player from "../entities/Player.js";
 import Slime from "../entities/Slime.js";
 import Bat from "../entities/Bat.js";
+import SkeletonWarrior from "../entities/SkeletonWarrior.js";
+import ArcherGoblin from "../entities/ArcherGoblin.js";
 import HealthSystem from "../systems/HealthSystem.js";
+import GuildQuestSystem from "../systems/GuildQuestSystem.js";
 
 const TILE_SIZE = 16;
 
@@ -105,6 +108,11 @@ export const DungeonFloorMixin = {
     }
     this.enemyGroup = this.physics.add.group();
 
+    if (this.arrowGroup) {
+      this.arrowGroup.clear(true, true);
+    }
+    this.arrowGroup = this.physics.add.group({ runChildUpdate: true });
+
     for (const sp of this._layout.spawns.enemies) {
       const ex = sp.x * TILE_SIZE + TILE_SIZE / 2;
       const ey = sp.y * TILE_SIZE + TILE_SIZE / 2;
@@ -114,6 +122,10 @@ export const DungeonFloorMixin = {
         const lb = room.x * TILE_SIZE;
         const rb = (room.x + room.w) * TILE_SIZE;
         enemy = new Bat(this, ex, ey, lb, rb, sp.hp);
+      } else if (sp.type === "skeleton-warrior") {
+        enemy = new SkeletonWarrior(this, ex, ey, this._groundLayer, sp.hp);
+      } else if (sp.type === "archer") {
+        enemy = new ArcherGoblin(this, ex, ey, sp.hp);
       } else {
         enemy = new Slime(this, ex, ey, this._groundLayer);
         if (sp.hp > 1) enemy._health = sp.hp;
@@ -207,9 +219,11 @@ export const DungeonFloorMixin = {
 
   _advanceFloor() {
     this._currentFloor++;
+    GuildQuestSystem.advanceExploreQuest(this._currentFloor);
     this._emitFloorChanged();
     this.enemyGroup.clear(true, true);
     this.kunaiGroup.clear(true, true);
+    if (this.arrowGroup) this.arrowGroup.clear(true, true);
     if (this._passageTween) {
       this._passageTween.stop();
       this._passageTween = null;

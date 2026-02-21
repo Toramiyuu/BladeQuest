@@ -8,6 +8,7 @@ import UIScene from "./scenes/UIScene.js";
 import BlacksmithScene from "./scenes/BlacksmithScene.js";
 import PotionShopScene from "./scenes/PotionShopScene.js";
 import GuildBoardScene from "./scenes/GuildBoardScene.js";
+import KeybindingsScene from "./scenes/KeybindingsScene.js";
 
 const config = {
   type: Phaser.AUTO,
@@ -36,6 +37,7 @@ const config = {
     BlacksmithScene,
     PotionShopScene,
     GuildBoardScene,
+    KeybindingsScene,
   ],
 };
 

@@ -46,6 +46,7 @@ export default class UIScene extends Phaser.Scene {
     this._createManaBar();
     this._createAbilitySlot();
     this._createFloorText();
+    this._createRoomProgress();
     this._createPotionSlots();
     this._createMinimap();
     this._initHelpKeys();

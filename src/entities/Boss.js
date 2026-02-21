@@ -1,3 +1,4 @@
+import Phaser from "phaser";
 import Enemy from "./Enemy.js";
 import BossAI from "../systems/BossAI.js";
 import {
@@ -9,37 +10,47 @@ import {
 } from "../config/constants.js";
 
 /**
- * Boss — large enemy with two-phase AI.
+ * Boss — large enemy with two-phase AI and a type-specific special attack.
  *
- * Uses scaled-up skeleton sprite with red tint as placeholder.
- * Receives pixel bounds of the boss room.
+ * Receives an optional bossConfig (from bossTypes.js) that controls tint,
+ * scale, AI speeds, and the periodic special attack behaviour.
  */
-const BOSS_SCALE = 1.1;
+const DEFAULT_SCALE = 1.1;
+const DEFAULT_TINT = 0xff2222;
 
 export default class Boss extends Enemy {
-  constructor(scene, x, y, leftBound, rightBound, health) {
-    super(scene, x, y, "skel-idle", health);
+  constructor(scene, x, y, leftBound, rightBound, health, bossConfig) {
+    const sp = bossConfig?.sprites;
+    super(scene, x, y, sp?.idleKey ?? "skel-idle", health);
 
+    this._cfg = bossConfig ?? null;
     this._maxHealth = health;
+
+    const ai = bossConfig?.aiParams ?? {};
     this._ai = new BossAI({
       leftBound,
       rightBound,
       maxHealth: health,
-      patrolSpeed: BOSS_PATROL_SPEED,
-      chargeSpeed: BOSS_CHARGE_SPEED,
-      chargeRange: BOSS_CHARGE_RANGE,
-      jumpForce: BOSS_JUMP_FORCE,
+      patrolSpeed: ai.patrolSpeed ?? BOSS_PATROL_SPEED,
+      chargeSpeed: ai.chargeSpeed ?? BOSS_CHARGE_SPEED,
+      chargeRange: ai.chargeRange ?? BOSS_CHARGE_RANGE,
+      jumpForce: ai.jumpForce ?? BOSS_JUMP_FORCE,
     });
 
-    this.setScale(BOSS_SCALE);
-    this.setTint(0xff2222);
-    this.body.setSize(28, 44);
-    this.body.setOffset(18, 16);
+    this.setScale(bossConfig?.scale ?? DEFAULT_SCALE);
+    if ((bossConfig?.tint ?? DEFAULT_TINT) !== 0xffffff) {
+      this.setTint(bossConfig.tint);
+    }
+    const hb = bossConfig?.hitbox ?? { w: 28, h: 44, ox: 18, oy: 16 };
+    this.body.setSize(hb.w, hb.h);
+    this.body.setOffset(hb.ox, hb.oy);
     this.setDepth(5);
     this.body.setGravityY(0);
     this.body.setMaxVelocityX(300);
 
-    this.play("boss-walk");
+    this.play(sp?.walkKey ?? "boss-walk");
+
+    this._specialCooldownMs = (bossConfig?.special?.intervalMs ?? 5000) * 0.5;
   }
 
   get phase() {
@@ -67,12 +78,56 @@ export default class Boss extends Enemy {
     }
 
     this.setFlipX(vx > 0);
+
+    if (this._cfg?.special && player?.active) {
+      this._specialCooldownMs -= dt;
+      if (this._specialCooldownMs <= 0) {
+        this._specialCooldownMs = this._cfg.special.intervalMs;
+        this._doSpecial(player);
+      }
+    }
+  }
+
+  /**
+   * Fires a telegraphed special attack:
+   *   1. Expanding coloured zone shows the danger area (220 ms warning)
+   *   2. Delayed hit-check damages the player if still inside the radius
+   */
+  _doSpecial(player) {
+    const cfg = this._cfg.special;
+    const diameter = cfg.range * 2.2;
+
+    const flash = this.scene.add
+      .rectangle(this.x, this.y, diameter, diameter, cfg.color, 0.38)
+      .setDepth(8);
+    this.scene.tweens.add({
+      targets: flash,
+      alpha: 0,
+      scaleX: 1.5,
+      scaleY: 1.5,
+      duration: 460,
+      ease: "Quad.easeOut",
+      onComplete: () => flash.destroy(),
+    });
+
+    this.scene.time.delayedCall(220, () => {
+      if (!this.active || !player.active) return;
+      const dist = Phaser.Math.Distance.Between(
+        this.x,
+        this.y,
+        player.x,
+        player.y,
+      );
+      if (dist <= cfg.range) {
+        this.scene._onBossSpecialHitPlayer?.(cfg.damage);
+      }
+    });
   }
 
   _die() {
     this._isDead = true;
     this.body.enable = false;
-    this.play("boss-death");
+    this.play(this._cfg?.sprites?.deathKey ?? "boss-death");
 
     const dx = this.x;
     const dy = this.y;

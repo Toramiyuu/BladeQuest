@@ -23,8 +23,9 @@ const SECTIONS = [
         name: "Flame Blade",
         cost: "50g + 10 bones + 3 crystals",
       },
+      { icon: "weapon-30", name: "Void Edge", cost: "500g + 3 essence" },
     ],
-    iconXs: [165, 240, 315],
+    iconXs: [150, 210, 270, 330],
     sectionY: 20,
   },
   {
@@ -35,8 +36,10 @@ const SECTIONS = [
     tiers: [
       { icon: "armor-01", name: "Leather Armor" },
       { icon: "armor-10", name: "Chain Mail", cost: "15g + 8 bones" },
+      { icon: "armor-20", name: "Knight Plate", cost: "300g + 4 crystals" },
+      { icon: "armor-30", name: "Sacred Armor", cost: "600g + 2 essence" },
     ],
-    iconXs: [200, 280],
+    iconXs: [150, 210, 270, 330],
     sectionY: 100,
   },
 ];

@@ -51,6 +51,65 @@ export default class BootScene extends Phaser.Scene {
       frameHeight: 128,
     });
 
+    const cls128 = { frameWidth: 128, frameHeight: 128 };
+    ["idle", "run", "attack1", "attack2", "jump", "dead", "hurt"].forEach(
+      (a) => {
+        this.load.spritesheet(
+          `shinobi-${a}`,
+          `assets/sprites/shinobi/${a}.png`,
+          cls128,
+        );
+        this.load.spritesheet(
+          `knight-${a}`,
+          `assets/sprites/knight/${a}.png`,
+          cls128,
+        );
+        this.load.spritesheet(
+          `mage-${a}`,
+          `assets/sprites/mage/${a}.png`,
+          cls128,
+        );
+        this.load.spritesheet(
+          `berserker-${a}`,
+          `assets/sprites/berserker/${a}.png`,
+          cls128,
+        );
+      },
+    );
+    ["idle", "run", "attack1", "attack2", "dead", "hurt"].forEach((a) => {
+      this.load.spritesheet(
+        `rogue-${a}`,
+        `assets/sprites/rogue/${a}.png`,
+        cls128,
+      );
+    });
+
+    ["idle", "walk", "dead"].forEach((a) => {
+      this.load.spritesheet(
+        `hollow-knight-${a}`,
+        `assets/sprites/boss/hollow-knight/${a}.png`,
+        cls128,
+      );
+      this.load.spritesheet(
+        `frost-lich-${a}`,
+        `assets/sprites/boss/frost-lich/${a}.png`,
+        cls128,
+      );
+    });
+    const boss256 = { frameWidth: 256, frameHeight: 256 };
+    ["idle", "walk", "dead"].forEach((a) => {
+      this.load.spritesheet(
+        `inferno-wyrm-${a}`,
+        `assets/sprites/boss/inferno-wyrm/${a}.png`,
+        boss256,
+      );
+      this.load.spritesheet(
+        `shadow-sovereign-${a}`,
+        `assets/sprites/boss/shadow-sovereign/${a}.png`,
+        boss256,
+      );
+    });
+
     this.load.spritesheet("skel-idle", "assets/sprites/skeleton/idle.png", {
       frameWidth: 64,
       frameHeight: 64,

@@ -9,7 +9,9 @@ import SaveManager from "../systems/SaveManager.js";
 import { BOSS_BASE_HP, BOSS_HP_PER_TIER } from "../config/constants.js";
 import InventorySystem from "../systems/InventorySystem.js";
 import { getDropsForEnemy } from "../systems/DropSystem.js";
+import { calculateIncoming } from "../systems/DefenseCalc.js";
 import { PIXEL_FONT } from "../config/PixelFont.js";
+import { BOSS_TYPES } from "../config/bossTypes.js";
 
 const TILE_SIZE = 16;
 
@@ -31,7 +33,10 @@ export const DungeonBossMixin = {
     const lb = room.x * TILE_SIZE;
     const rb = (room.x + room.w) * TILE_SIZE;
 
-    this._boss = new Boss(this, bx, by, lb, rb, bossHP);
+    const bossTypeIndex = Math.min(tier - 1, BOSS_TYPES.length - 1);
+    const bossConfig = BOSS_TYPES[Math.max(0, bossTypeIndex)];
+
+    this._boss = new Boss(this, bx, by, lb, rb, bossHP, bossConfig);
     this.enemyGroup.add(this._boss, true);
     this._trackCollider(
       this.physics.add.collider(this._boss, this._groundLayer),
@@ -55,25 +60,74 @@ export const DungeonBossMixin = {
         if (!this.sys?.isActive()) return;
         this.time.timeScale = 1;
         this.physics.world.timeScale = 1;
-        this._dyingMs = 1500;
+        this._dyingMs = Infinity;
+
+        const inv = InventorySystem.getInventory();
+        const goldEarned = Math.max(
+          0,
+          inv.gold - (this._runStats?.goldStart ?? inv.gold),
+        );
+        const kills = this._runStats?.kills ?? 0;
+        const floor = this._currentFloor;
 
         this.add
-          .rectangle(240, 135, 480, 270, 0x000000, 0.7)
+          .rectangle(240, 135, 480, 270, 0x000000, 0.75)
           .setScrollFactor(0)
           .setDepth(199);
 
         this.add
-          .bitmapText(
-            this.cameras.main.worldView.centerX,
-            this.cameras.main.worldView.centerY - 30,
-            PIXEL_FONT,
-            `You Died - Floor ${this._currentFloor}`,
-            16,
-          )
-          .setOrigin(0.5)
-          .setTint(0xff4444)
+          .rectangle(240, 130, 240, 140, 0x0a0a1a)
+          .setStrokeStyle(1, 0x663333)
           .setScrollFactor(0)
           .setDepth(200);
+
+        this.add
+          .bitmapText(240, 72, PIXEL_FONT, "YOU DIED", 16)
+          .setOrigin(0.5, 0)
+          .setTint(0xff4444)
+          .setScrollFactor(0)
+          .setDepth(201);
+
+        const rows = [
+          { label: "Floor Reached", value: `${floor}` },
+          { label: "Enemies Slain", value: `${kills}` },
+          { label: "Gold Earned", value: `${goldEarned}` },
+        ];
+        rows.forEach(({ label, value }, i) => {
+          const y = 100 + i * 18;
+          this.add
+            .bitmapText(130, y, PIXEL_FONT, label, 8)
+            .setOrigin(0, 0.5)
+            .setTint(0xaaaaaa)
+            .setScrollFactor(0)
+            .setDepth(201);
+          this.add
+            .bitmapText(350, y, PIXEL_FONT, value, 8)
+            .setOrigin(1, 0.5)
+            .setTint(0xffffff)
+            .setScrollFactor(0)
+            .setDepth(201);
+        });
+
+        const btn = this.add
+          .rectangle(240, 165, 120, 14, 0x331111)
+          .setStrokeStyle(1, 0xff4444)
+          .setScrollFactor(0)
+          .setDepth(201)
+          .setInteractive();
+        this.add
+          .bitmapText(240, 165, PIXEL_FONT, "RETURN TO HUB", 8)
+          .setOrigin(0.5, 0.5)
+          .setTint(0xff8888)
+          .setScrollFactor(0)
+          .setDepth(202);
+
+        btn.on("pointerover", () => btn.setStrokeStyle(2, 0xffffff));
+        btn.on("pointerout", () => btn.setStrokeStyle(1, 0xff4444));
+        btn.on("pointerdown", () => {
+          if (this._deathFading) return;
+          this._dyingMs = 0;
+        });
       }, 400);
 
       this.events.once("shutdown", () => {
@@ -115,7 +169,28 @@ export const DungeonBossMixin = {
     ) {
       this._bossWarningShown = true;
       this.cameras.main.shake(300, 0.01);
-      this.registry.get("events").emit("boss-warning");
+      const bossName = this._boss?._cfg?.name ?? "";
+      this.registry.get("events").emit("boss-warning", { bossName });
+    }
+  },
+
+  _onBossSpecialHitPlayer(damage) {
+    const before = this._healthSystem.currentHealth;
+    const def = calculateIncoming(damage, this.player._armorTier ?? 0);
+    this.player.takeDamage(def, this._boss?.x ?? this.player.x);
+    if (this._healthSystem.currentHealth < before) {
+      this._emitHealthChanged();
+      this.cameras.main.shake(150, 0.007);
+      const f = this.add
+        .rectangle(240, 135, 480, 270, 0xff0000, 0.35)
+        .setScrollFactor(0)
+        .setDepth(195);
+      this.tweens.add({
+        targets: f,
+        alpha: 0,
+        duration: 180,
+        onComplete: () => f.destroy(),
+      });
     }
   },
 

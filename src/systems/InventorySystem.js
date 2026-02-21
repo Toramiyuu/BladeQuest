@@ -19,9 +19,14 @@ const DEFAULT_INVENTORY = {
 const WEAPON_COSTS = [
   { gold: 20, bones: 5 },
   { gold: 50, bones: 10, crystals: 3 },
+  { gold: 500, essence: 3 },
 ];
 
-const ARMOR_COSTS = [{ gold: 15, bones: 8 }];
+const ARMOR_COSTS = [
+  { gold: 15, bones: 8 },
+  { gold: 300, crystals: 4 },
+  { gold: 600, essence: 2 },
+];
 
 const POTION_COSTS = {
   health: 10,

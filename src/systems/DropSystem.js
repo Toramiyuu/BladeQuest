@@ -12,7 +12,7 @@ function randInt(min, max) {
 
 /**
  * Returns a drops object for the given enemy type and floor depth.
- * @param {string} type - "skeleton" | "bat" | "boss"
+ * @param {string} type - "skeleton" | "bat" | "skeleton-warrior" | "archer" | "boss"
  * @param {number} floor - current dungeon floor number
  * @returns {{ gold: number, bones?: number, crystals?: number, essence?: number }}
  */
@@ -28,6 +28,19 @@ export function getDropsForEnemy(type, floor) {
       return {
         gold: randInt(1, 2),
         crystals: Math.random() < 0.5 ? 1 : 0,
+      };
+
+    case "skeleton-warrior":
+      return {
+        gold: randInt(2, 5),
+        bones: Math.random() < 0.8 ? randInt(1, 2) : 0,
+      };
+
+    case "archer":
+      return {
+        gold: randInt(2, 4),
+        crystals: Math.random() < 0.4 ? 1 : 0,
+        bones: Math.random() < 0.5 ? 1 : 0,
       };
 
     case "boss":

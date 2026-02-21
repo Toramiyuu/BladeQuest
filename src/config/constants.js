@@ -52,6 +52,7 @@ export const SLIME_SPEED = 60;
 export const SLIME_HEALTH = 1;
 export const SLIME_DAMAGE = 1;
 export const SLIME_DEATH_MS = 200;
+export const ARROW_DAMAGE = 1;
 
 export const FALL_DEATH_MARGIN = 32;
 
