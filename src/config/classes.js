@@ -9,6 +9,7 @@ const CLASSES = [
   {
     id: "shinobi",
     name: "Shinobi",
+    primarySchool: "crimsonFang",
     description: "A swift shadow warrior who strikes from afar",
     spriteKeys: {
       idle: "shinobi-idle",
@@ -26,6 +27,7 @@ const CLASSES = [
   {
     id: "knight",
     name: "Holy Knight",
+    primarySchool: "ironTide",
     description: "A righteous warrior wielding holy power",
     spriteKeys: {
       idle: "knight-idle",
@@ -43,6 +45,7 @@ const CLASSES = [
   {
     id: "rogue",
     name: "Rogue",
+    primarySchool: "phantomGale",
     description: "A shadow dancer who blinks through enemies",
     spriteKeys: {
       idle: "rogue-idle",
@@ -60,6 +63,7 @@ const CLASSES = [
   {
     id: "mage",
     name: "Mage",
+    primarySchool: "phantomGale",
     description: "An arcane spellcaster who commands elemental forces",
     spriteKeys: {
       idle: "mage-idle",
@@ -77,6 +81,7 @@ const CLASSES = [
   {
     id: "berserker",
     name: "Berserker",
+    primarySchool: "crimsonFang",
     description: "A rage-fueled warrior who thrives in the heat of battle",
     spriteKeys: {
       idle: "berserker-idle",

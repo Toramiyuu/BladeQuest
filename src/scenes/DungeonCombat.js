@@ -15,6 +15,7 @@ import { calculateIncoming } from "../systems/DefenseCalc.js";
 import { getDropsForEnemy } from "../systems/DropSystem.js";
 import { PIXEL_FONT } from "../config/PixelFont.js";
 import GuildQuestSystem from "../systems/GuildQuestSystem.js";
+import SchoolSystem from "../systems/SchoolSystem.js";
 
 export const DungeonCombatMixin = {
   _setupOverlaps() {
@@ -81,10 +82,18 @@ export const DungeonCombatMixin = {
     if (isHeavy) {
       enemy.body.setVelocityX(this.player.facing * HEAVY_KNOCKBACK_X);
     }
+    const now = this.time.now;
+    const isFirstBlood = SchoolSystem.isFirstBlood(enemy, now);
+    SchoolSystem.recordHit(enemy, now);
+    if (isFirstBlood) {
+      SchoolSystem.addFirstBloodXP();
+      this._showFirstBloodIndicator(enemy.x, enemy.y);
+    }
     const base = calculateDamage({
       weaponTier: this._weaponTier,
       classId: this._classId,
       isHeavy,
+      isFirstBlood,
     });
     const dmg = Math.ceil(base * (this.player._damageMultiplier ?? 1));
     const wasDead = enemy.isDead;
@@ -101,15 +110,23 @@ export const DungeonCombatMixin = {
       });
     }
     if (!wasDead && enemy.isDead) this._onEnemyDied(enemy);
-    this._showDamageNumber(enemy.x, enemy.y, dmg, isHeavy);
+    this._showDamageNumber(enemy.x, enemy.y, dmg, isHeavy, isFirstBlood);
   },
 
   _onAirSlashHit(_hitbox, enemy) {
     if (this.player.hitEnemies.has(enemy)) return;
     this.player.hitEnemies.add(enemy);
+    const now = this.time.now;
+    const isFirstBlood = SchoolSystem.isFirstBlood(enemy, now);
+    SchoolSystem.recordHit(enemy, now);
+    if (isFirstBlood) {
+      SchoolSystem.addFirstBloodXP();
+      this._showFirstBloodIndicator(enemy.x, enemy.y);
+    }
     const base = calculateDamage({
       weaponTier: this._weaponTier,
       classId: this._classId,
+      isFirstBlood,
     });
     const dmg = Math.ceil(base * (this.player._damageMultiplier ?? 1));
     const wasDead = enemy.isDead;
@@ -117,7 +134,7 @@ export const DungeonCombatMixin = {
     this.player.applyAirSlashBounce();
     this._audio?.play("hit");
     if (!wasDead && enemy.isDead) this._onEnemyDied(enemy);
-    this._showDamageNumber(enemy.x, enemy.y, dmg, false);
+    this._showDamageNumber(enemy.x, enemy.y, dmg, false, isFirstBlood);
   },
 
   _onPlayerContactEnemy(_player, enemy) {
@@ -186,6 +203,7 @@ export const DungeonCombatMixin = {
   /** Called when an enemy transitions from alive → dead. Awards drops and shows floating text. */
   _onEnemyDied(enemy) {
     if (enemy === this._boss) return;
+    SchoolSystem.onEnemyDied(enemy);
     const type = enemy.enemyType ?? "skeleton";
     const drops = getDropsForEnemy(type, this._currentFloor);
 
@@ -208,9 +226,9 @@ export const DungeonCombatMixin = {
     this._spawnDeathParticles(enemy.x, enemy.y);
   },
 
-  /** Floating damage number above enemy on hit. Yellow for heavy, white otherwise. */
-  _showDamageNumber(x, y, dmg, isHeavy) {
-    const tint = isHeavy ? 0xffdd44 : 0xffffff;
+  /** Floating damage number above enemy on hit. Red-orange for First Blood, yellow for heavy, white otherwise. */
+  _showDamageNumber(x, y, dmg, isHeavy, isFirstBlood = false) {
+    const tint = isFirstBlood ? 0xff6622 : isHeavy ? 0xffdd44 : 0xffffff;
     const txt = this.add
       .bitmapText(x, y - 16, "pixel", `${dmg}`, 8)
       .setOrigin(0.5)

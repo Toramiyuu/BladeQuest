@@ -24,6 +24,25 @@ export const DungeonEffectsMixin = {
     spawn(-3, 0x0033ff);
   },
 
+  /** "FIRST BLOOD!" text pop above the enemy that triggered it. */
+  _showFirstBloodIndicator(x, y) {
+    const txt = this.add
+      .bitmapText(x, y - 28, "pixel", "FIRST BLOOD!", 9)
+      .setOrigin(0.5)
+      .setTint(0xff6622)
+      .setDepth(65);
+    this.tweens.add({
+      targets: txt,
+      y: y - 52,
+      alpha: 0,
+      scaleX: 1.3,
+      scaleY: 1.3,
+      duration: 900,
+      ease: "Quad.easeOut",
+      onComplete: () => txt.destroy(),
+    });
+  },
+
   /** Burst of 7 pixel-square particles outward when an enemy dies. */
   _spawnDeathParticles(x, y) {
     const COLORS = [0xeeeeee, 0xcccccc, 0xaaaaaa, 0x888888];

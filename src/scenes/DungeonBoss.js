@@ -12,6 +12,7 @@ import { getDropsForEnemy } from "../systems/DropSystem.js";
 import { calculateIncoming } from "../systems/DefenseCalc.js";
 import { PIXEL_FONT } from "../config/PixelFont.js";
 import { BOSS_TYPES } from "../config/bossTypes.js";
+import SchoolSystem from "../systems/SchoolSystem.js";
 
 const TILE_SIZE = 16;
 
@@ -201,6 +202,8 @@ export const DungeonBossMixin = {
 
     this._bossDefeated = true;
     this._audio?.play("floorClear");
+    SchoolSystem.onEnemyDied(this._boss);
+    SchoolSystem.addBossKillXP();
     SaveManager.clearBossFloor(this._currentFloor);
     for (let i = 0; i < 3; i++) {
       this.time.delayedCall(i * 110, () => {

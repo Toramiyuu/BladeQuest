@@ -10,6 +10,7 @@ import { DungeonEventsMixin } from "./DungeonEvents.js";
 import { DungeonPotionMixin } from "./DungeonPotion.js";
 import { DungeonEffectsMixin } from "./DungeonEffects.js";
 import AudioManager from "../systems/AudioManager.js";
+import SchoolSystem from "../systems/SchoolSystem.js";
 import {
   MAX_DELTA_MS,
   CAMERA_LEAD_X,
@@ -29,6 +30,7 @@ export default class DungeonScene extends Phaser.Scene {
     this._classId = data.classId || ClassRegistry.getDefault().id;
     this._startFloor = data.startFloor || 1;
     this._currentFloor = this._startFloor;
+    SchoolSystem.init(this._classId);
   }
 
   create() {

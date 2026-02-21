@@ -4,6 +4,7 @@ import { UISceneHUDMixin } from "./UISceneHUD.js";
 import { UISceneMinimapMixin } from "./UISceneMinimap.js";
 import { UISceneOverlaysMixin } from "./UISceneOverlays.js";
 import { UISceneStatsMixin } from "./UISceneStats.js";
+import { UISceneSchoolMixin } from "./UISceneSchool.js";
 
 export default class UIScene extends Phaser.Scene {
   constructor() {
@@ -53,11 +54,13 @@ export default class UIScene extends Phaser.Scene {
     this._createMinimap();
     this._initHelpKeys();
     this._initStatsKeys();
+    this._createSchoolHUD();
   }
 
   update() {
     this._updateManaBar();
     this._updateBuffTimers();
+    this._updateSchoolHUD();
   }
 }
 
@@ -67,4 +70,5 @@ Object.assign(
   UISceneMinimapMixin,
   UISceneOverlaysMixin,
   UISceneStatsMixin,
+  UISceneSchoolMixin,
 );
