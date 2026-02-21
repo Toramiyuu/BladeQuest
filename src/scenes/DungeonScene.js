@@ -11,6 +11,7 @@ import { DungeonPotionMixin } from "./DungeonPotion.js";
 import { DungeonEffectsMixin } from "./DungeonEffects.js";
 import AudioManager from "../systems/AudioManager.js";
 import SchoolSystem from "../systems/SchoolSystem.js";
+import GuildQuestSystem from "../systems/GuildQuestSystem.js";
 import {
   MAX_DELTA_MS,
   CAMERA_LEAD_X,
@@ -31,6 +32,10 @@ export default class DungeonScene extends Phaser.Scene {
     this._startFloor = data.startFloor || 1;
     this._currentFloor = this._startFloor;
     SchoolSystem.init(this._classId);
+    if (data.freshStart) {
+      const potionType = GuildQuestSystem.hasFreePotion();
+      if (potionType) InventorySystem.addPotion(potionType);
+    }
   }
 
   create() {

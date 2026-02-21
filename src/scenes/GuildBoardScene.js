@@ -5,6 +5,8 @@ import GuildQuestSystem from "../systems/GuildQuestSystem.js";
 import { buildQuestBoard } from "./GuildQuestBoard.js";
 import { buildDropTrading } from "./GuildDropTrading.js";
 import { buildBossFloors } from "./GuildBossFloors.js";
+import { buildRankInfo } from "./GuildRankInfo.js";
+import { buildCheckpoints } from "./GuildCheckpoints.js";
 import { PIXEL_FONT } from "../config/PixelFont.js";
 
 const PX = 50,
@@ -84,7 +86,9 @@ export default class GuildBoardScene extends Phaser.Scene {
     );
     this._enterBtn.on("pointerdown", () => this._startDungeon(1));
 
-    this._buildCheckpoints(SaveManager.getClearedFloors());
+    buildCheckpoints(this, PX, PW, PY, SaveManager.getClearedFloors(), (f) =>
+      this._startDungeon(f),
+    );
     this._refreshCards();
 
     this.add
@@ -110,6 +114,11 @@ export default class GuildBoardScene extends Phaser.Scene {
     this._bossTabObjects = this.children.list.slice(bBefore);
     for (const obj of this._bossTabObjects) obj.setVisible(false);
 
+    const rBefore = this.children.list.length;
+    buildRankInfo(this, PX, PW, PY);
+    this._rankTabObjects = this.children.list.slice(rBefore);
+    for (const obj of this._rankTabObjects) obj.setVisible(false);
+
     this._activeTab = "quests";
 
     bt(this, CX, PY + PH - 2, "ESC to close", 8, 0x555555, 0.5, 1);
@@ -134,8 +143,9 @@ export default class GuildBoardScene extends Phaser.Scene {
 
   _buildTabs() {
     const defs = [
-      { key: "quests", label: "QUESTS", x: CX - 60 },
-      { key: "bosses", label: "BOSS FLOORS", x: CX + 65 },
+      { key: "quests", label: "QUESTS", x: CX - 90 },
+      { key: "bosses", label: "BOSS FLOORS", x: CX },
+      { key: "rank", label: "RANK", x: CX + 88 },
     ];
     this._tabBtns = {};
     defs.forEach(({ key, label, x }) => {
@@ -166,6 +176,8 @@ export default class GuildBoardScene extends Phaser.Scene {
     this._activeTab = key;
 
     const showQuests = key === "quests";
+    const showBosses = key === "bosses";
+    const showRank = key === "rank";
 
     for (const obj of this._questTabObjects) {
       if (obj?.active) obj.setVisible(showQuests);
@@ -174,7 +186,10 @@ export default class GuildBoardScene extends Phaser.Scene {
       if (obj?.active) obj.setVisible(showQuests);
     }
     for (const obj of this._bossTabObjects) {
-      if (obj?.active) obj.setVisible(!showQuests);
+      if (obj?.active) obj.setVisible(showBosses);
+    }
+    for (const obj of this._rankTabObjects ?? []) {
+      if (obj?.active) obj.setVisible(showRank);
     }
 
     for (const [k, { btn, txt }] of Object.entries(this._tabBtns)) {
@@ -236,34 +251,6 @@ export default class GuildBoardScene extends Phaser.Scene {
     }
   }
 
-  _buildCheckpoints(cleared) {
-    if (!cleared || cleared.length === 0) return;
-    const floors = cleared.slice(0, 5);
-    const btnW = 36,
-      gap = 6;
-    const totalW = floors.length * btnW + (floors.length - 1) * gap;
-    const startX = CX - totalW / 2 + btnW / 2;
-    floors.forEach((floor, i) => {
-      const bx = startX + i * (btnW + gap);
-      const btn = this.add
-        .rectangle(bx, PY + 120, btnW, 12, 0x1a1a33)
-        .setStrokeStyle(1, 0x4466aa)
-        .setScrollFactor(0)
-        .setDepth(D)
-        .setInteractive();
-      bt(this, bx, PY + 120, `F${floor + 1}`, 8, 0x88aaff, 0.5, 0.5);
-      btn.on("pointerover", () => {
-        btn.setScale(1.05);
-        btn.setStrokeStyle(2, 0xffffff);
-      });
-      btn.on("pointerout", () => {
-        btn.setScale(1.0);
-        btn.setStrokeStyle(1, 0x4466aa);
-      });
-      btn.on("pointerdown", () => this._startDungeon(floor + 1));
-    });
-  }
-
   _startDungeon(floor) {
     if (this._closing) return;
     this._closing = true;
@@ -273,7 +260,11 @@ export default class GuildBoardScene extends Phaser.Scene {
     this.cameras.main.once("camerafadeoutcomplete", () => {
       this.scene.stop("GuildBoardScene");
       this.scene.stop("HubScene");
-      this.scene.start("DungeonScene", { classId, startFloor: floor });
+      this.scene.start("DungeonScene", {
+        classId,
+        startFloor: floor,
+        freshStart: true,
+      });
     });
   }
 

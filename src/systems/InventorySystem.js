@@ -161,6 +161,17 @@ const InventorySystem = {
     return true;
   },
 
+  /** Grants n potions of type directly (perk rewards, no gold cost). Capped at MAX_POTION_COUNT. */
+  addPotion(type, n = 1) {
+    this._ensureInit();
+    if (!VALID_POTIONS.includes(type)) return;
+    this._state.potionCounts[type] = Math.min(
+      MAX_POTION_COUNT,
+      (this._state.potionCounts[type] ?? 0) + n,
+    );
+    this.saveInventory();
+  },
+
   /** Buys one of type potion if gold sufficient and count < max. Returns true on success. */
   buyPotion(type) {
     this._ensureInit();

@@ -14,6 +14,7 @@
  */
 
 import SaveManager from "./SaveManager.js";
+import { GUILD_PERKS } from "../config/guildPerks.js";
 
 const RANKS = ["F", "E", "D", "C", "B", "A"];
 
@@ -231,14 +232,55 @@ const GuildQuestSystem = {
     return reward;
   },
 
+  /** Returns the maximum quest slots for the current rank. */
+  getMaxSlots() {
+    return GUILD_PERKS[this.getRank()]?.slots ?? MAX_ACTIVE;
+  },
+
+  /** Returns the shop discount fraction (0–0.25) for the current rank. */
+  getDiscount() {
+    return GUILD_PERKS[this.getRank()]?.discount ?? 0;
+  },
+
+  /** Returns the free-potion type for current rank ("health"), or null if none. */
+  hasFreePotion() {
+    return GUILD_PERKS[this.getRank()]?.freePotion ?? null;
+  },
+
+  /** Returns the active perk label array for the current rank. */
+  getPerkList() {
+    return GUILD_PERKS[this.getRank()]?.perks ?? [];
+  },
+
+  /** Returns total reputation earned. */
+  getReputation() {
+    if (!_guild) _load();
+    return _guild.reputation ?? 0;
+  },
+
+  /** Returns total quests completed. */
+  getQuestsCompleted() {
+    if (!_guild) _load();
+    return _guild.questsCompleted ?? 0;
+  },
+
+  /** Returns next rank gate requirements, or null if already at rank A. */
+  getNextRankRequirements() {
+    const idx = RANKS.indexOf(this.getRank());
+    if (idx < 0 || idx >= RANKS.length - 1) return null;
+    const gate = RANK_GATES[idx + 1];
+    return { rank: gate.rank, quests: gate.quests, bossFloor: gate.bossFloor };
+  },
+
   /** Internal: fill empty quest slots from the pool. skipIds prevents immediate re-offer. */
   _fillSlots(skipIds = new Set()) {
+    const max = this.getMaxSlots();
     const activeIds = new Set(_guild.activeQuests.map((q) => q.id));
     const available = QUEST_POOL.filter(
       (t) => !activeIds.has(t.id) && !skipIds.has(t.id),
     );
     let i = 0;
-    while (_guild.activeQuests.length < MAX_ACTIVE && i < available.length) {
+    while (_guild.activeQuests.length < max && i < available.length) {
       const template = available[i++];
       _guild.activeQuests.push({ ...template, progress: 0 });
     }
