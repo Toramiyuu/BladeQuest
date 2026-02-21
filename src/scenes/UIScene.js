@@ -33,6 +33,7 @@ export default class UIScene extends Phaser.Scene {
     bind("save-complete", this._onSaveComplete);
     bind("save-failed", this._onSaveFailed);
     bind("boss-warning", this._onBossWarning);
+    bind("buff-started", this._onBuffStarted);
 
     this._saveResultBridge = (success) =>
       events.emit(success ? "save-complete" : "save-failed");
@@ -45,6 +46,7 @@ export default class UIScene extends Phaser.Scene {
 
     this._createManaBar();
     this._createAbilitySlot();
+    this._createBuffTimers();
     this._createFloorText();
     this._createRoomProgress();
     this._createPotionSlots();
@@ -55,6 +57,7 @@ export default class UIScene extends Phaser.Scene {
 
   update() {
     this._updateManaBar();
+    this._updateBuffTimers();
   }
 }
 

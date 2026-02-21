@@ -42,6 +42,8 @@ export const DungeonPotionMixin = {
     const type = InventorySystem.consumePotion(slot);
     if (!type) return;
 
+    this._audio?.play("potion");
+
     if (type === "health") {
       this._healthSystem.heal(2);
       this._emitHealthChanged();
@@ -51,11 +53,16 @@ export const DungeonPotionMixin = {
       this._speedPotionTimer = this.time.delayedCall(10000, () => {
         if (this.player?.body) this.player.body.setMaxVelocityX(PLAYER_SPEED);
       });
+      this._events.emit("buff-started", { type: "speed", durationMs: 10000 });
     } else if (type === "strength") {
       this.player._damageMultiplier = 1.5;
       if (this._strengthPotionTimer) this._strengthPotionTimer.remove();
       this._strengthPotionTimer = this.time.delayedCall(10000, () => {
         if (this.player) this.player._damageMultiplier = 1;
+      });
+      this._events.emit("buff-started", {
+        type: "strength",
+        durationMs: 10000,
       });
     }
 

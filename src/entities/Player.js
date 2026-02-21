@@ -3,6 +3,7 @@ import StateMachine from "../systems/StateMachine.js";
 import { CoyoteTimer } from "../systems/InputBuffer.js";
 import CombatSystem from "../systems/CombatSystem.js";
 import { PlayerCombatMixin } from "./PlayerCombat.js";
+import { PlayerAnimationsMixin } from "./PlayerAnimations.js";
 import ManaSystem from "../systems/ManaSystem.js";
 import AbilitySystem from "../systems/AbilitySystem.js";
 import { PlayerAbilityMixin } from "./PlayerAbility.js";
@@ -132,43 +133,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this._rollMs = 0;
     this._rollCooldownMs = 0;
     this._rollIframeMs = 0;
-  }
-
-  _setupStateMachine() {
-    const sm = this._stateMachine;
-    const sk = this.classConfig?.spriteKeys ?? {};
-
-    sm.addState("idle", {
-      enter: () => this._playAnim(sk.idle ?? "player-idle"),
-    });
-    sm.addState("run", { enter: () => this._playAnim(sk.run ?? "player-run") });
-    sm.addState("jump", {
-      enter: () => this._playAnim(sk.jump ?? "player-jump-up"),
-    });
-    sm.addState("fall", {
-      enter: () => this._playAnim(sk.fall ?? "player-fall"),
-    });
-    sm.addState("attack1", {
-      enter: () => this._playAnim(sk.attack1 ?? "player-attack1"),
-    });
-    sm.addState("attack2", {
-      enter: () => this._playAnim(sk.attack1 ?? "player-attack1"),
-    });
-    sm.addState("attack3", {
-      enter: () => this._playAnim(sk.attack2 ?? "player-attack2"),
-    });
-    sm.addState("air_attack", {
-      enter: () => this._playAnim(sk.attack1 ?? "player-attack1"),
-    });
-    sm.addState("roll", {
-      enter: () => this._playAnim(sk.run ?? "player-run"),
-    });
-  }
-
-  _playAnim(key) {
-    if (this.anims.currentAnim?.key !== key) {
-      this.play(key, true);
-    }
   }
 
   get stateMachine() {
@@ -322,5 +286,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   }
 }
 
+Object.assign(Player.prototype, PlayerAnimationsMixin);
 Object.assign(Player.prototype, PlayerCombatMixin);
 Object.assign(Player.prototype, PlayerAbilityMixin);

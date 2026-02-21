@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { PIXEL_FONT } from "../config/PixelFont.js";
+import { NPC_DIALOGUE } from "../config/npcDialogue.js";
 
 const SCALE = 0.35;
 const PROMPT_TEXT = "E  Interact";
@@ -26,6 +27,10 @@ export default class HubNPC extends Phaser.GameObjects.Sprite {
     this.role = role;
     this._idleKey = idleKey;
     this._dialogueKey = dialogueKey;
+    this._dialogueLines = NPC_DIALOGUE[role] ?? [];
+    this._dialogueIndex = 0;
+    this._speechBubble = null;
+    this._speechTimer = null;
 
     this.setScale(SCALE);
     this.setDepth(5);
@@ -86,9 +91,51 @@ export default class HubNPC extends Phaser.GameObjects.Sprite {
     }
   }
 
+  /** Cycle to the next dialogue line and show a speech bubble for 3 seconds. */
+  showDialogueLine() {
+    if (this._dialogueLines.length === 0) return;
+    this._speechBubble?.destroy();
+    if (this._speechTimer) {
+      this._speechTimer.remove();
+      this._speechTimer = null;
+    }
+    const line =
+      this._dialogueLines[this._dialogueIndex % this._dialogueLines.length];
+    this._dialogueIndex++;
+    const bx = this.x;
+    const by = this.y - 52;
+    const txt = this.scene.add
+      .bitmapText(bx, by, PIXEL_FONT, line, 7)
+      .setOrigin(0.5, 1)
+      .setTint(0xffffff)
+      .setDepth(20)
+      .setMaxWidth(110);
+    const bounds = txt.getTextBounds();
+    const padX = 8,
+      padY = 5;
+    const bg = this.scene.add
+      .rectangle(
+        bx,
+        by - bounds.local.height / 2 - padY,
+        bounds.local.width + padX * 2,
+        bounds.local.height + padY * 2,
+        0x000000,
+        0.75,
+      )
+      .setDepth(19);
+    this._speechBubble = this.scene.add.container(0, 0, [bg, txt]);
+    this._speechBubble.setDepth(19);
+    this._speechTimer = this.scene.time.delayedCall(3000, () => {
+      this._speechBubble?.destroy();
+      this._speechBubble = null;
+    });
+  }
+
   destroy(fromScene) {
     this._promptBg?.destroy();
     this._prompt?.destroy();
+    this._speechBubble?.destroy();
+    if (this._speechTimer) this._speechTimer.remove();
     super.destroy(fromScene);
   }
 }

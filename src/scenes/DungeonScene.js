@@ -8,6 +8,8 @@ import { DungeonCombatMixin } from "./DungeonCombat.js";
 import { DungeonBossMixin } from "./DungeonBoss.js";
 import { DungeonEventsMixin } from "./DungeonEvents.js";
 import { DungeonPotionMixin } from "./DungeonPotion.js";
+import { DungeonEffectsMixin } from "./DungeonEffects.js";
+import AudioManager from "../systems/AudioManager.js";
 import {
   MAX_DELTA_MS,
   CAMERA_LEAD_X,
@@ -55,6 +57,10 @@ export default class DungeonScene extends Phaser.Scene {
       .image(240, 135, "vignette-overlay")
       .setScrollFactor(0)
       .setDepth(-1);
+
+    this._audio = new AudioManager(this.game);
+    this.events.once("shutdown", () => this._audio?.destroy());
+    this._audio.startMusic("dungeon");
 
     this.scene.launch("UIScene");
     this._emitFloorChanged();
@@ -165,4 +171,5 @@ Object.assign(
   DungeonBossMixin,
   DungeonEventsMixin,
   DungeonPotionMixin,
+  DungeonEffectsMixin,
 );

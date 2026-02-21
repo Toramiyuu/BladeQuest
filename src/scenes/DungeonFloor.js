@@ -37,8 +37,22 @@ export const DungeonFloorMixin = {
     const worldH = height * TILE_SIZE;
 
     if (this._bgRect) this._bgRect.destroy();
+
+    const floorPalettes = [
+      { a: { r: 0x1a, g: 0x1a, b: 0x2e }, b: { r: 0x22, g: 0x22, b: 0x44 } },
+      { a: { r: 0x2e, g: 0x10, b: 0x08 }, b: { r: 0x44, g: 0x18, b: 0x08 } },
+      { a: { r: 0x08, g: 0x18, b: 0x2e }, b: { r: 0x0a, g: 0x22, b: 0x44 } },
+      { a: { r: 0x16, g: 0x08, b: 0x2e }, b: { r: 0x22, g: 0x0a, b: 0x44 } },
+      { a: { r: 0x08, g: 0x04, b: 0x10 }, b: { r: 0x12, g: 0x06, b: 0x1e } },
+    ];
+    const tier = Math.min(Math.floor((this._currentFloor - 1) / 10), 4);
+    const palette = floorPalettes[tier];
+    const _CA = palette.a;
+    const _CB = palette.b;
+    const baseColor = (_CA.r << 16) | (_CA.g << 8) | _CA.b;
+
     this._bgRect = this.add
-      .rectangle(0, 0, worldW, worldH, 0x1a1a2e)
+      .rectangle(0, 0, worldW, worldH, baseColor)
       .setOrigin(0, 0)
       .setDepth(-30);
 
@@ -46,8 +60,6 @@ export const DungeonFloorMixin = {
       this._flickerTween.stop();
       this._flickerTween = null;
     }
-    const _CA = { r: 0x1a, g: 0x1a, b: 0x2e };
-    const _CB = { r: 0x22, g: 0x22, b: 0x44 };
     this._flickerTween = this.tweens.addCounter({
       from: 0,
       to: 1,
@@ -218,6 +230,7 @@ export const DungeonFloorMixin = {
   },
 
   _advanceFloor() {
+    this._audio?.play("floorClear");
     this._currentFloor++;
     GuildQuestSystem.advanceExploreQuest(this._currentFloor);
     this._emitFloorChanged();
