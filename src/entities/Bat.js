@@ -8,24 +8,23 @@ import { BAT_HEALTH, BAT_SPEED, MAX_DELTA_MS } from "../config/constants.js";
  * Receives room pixel bounds so it stays within its spawn room.
  * Uses skeleton idle sprite with blue tint and smaller scale as placeholder.
  */
-const BAT_SCALE = 0.4;
+const BAT_SCALE = 0.8;
 
 export default class Bat extends Enemy {
   constructor(scene, x, y, leftBound, rightBound, health = BAT_HEALTH) {
-    super(scene, x, y, "skel-idle", health);
+    super(scene, x, y, "bat-idle", health);
 
     this._ai = new BatAI({ speed: BAT_SPEED, leftBound, rightBound }, x);
 
     this.setScale(BAT_SCALE);
-    this.setTint(0x4488ff);
-    this.body.setSize(24, 30);
-    this.body.setOffset(20, 20);
+    this.body.setSize(20, 14);
+    this.body.setOffset(4, 7);
     this.setDepth(5);
 
     this.body.setAllowGravity(false);
     this.body.setCollideWorldBounds(false);
 
-    this.play("bat-fly");
+    this.play("bat-idle");
   }
 
   update(_time, delta) {
@@ -40,7 +39,6 @@ export default class Bat extends Enemy {
   _die() {
     this._isDead = true;
     this.body.enable = false;
-    this.setTint(0xff4444);
     this.scene.tweens.add({
       targets: this,
       alpha: 0,

@@ -11,25 +11,24 @@ import { MAX_DELTA_MS } from "../config/constants.js";
  *
  * Arrow spawning adds to scene.arrowGroup (created by DungeonFloor).
  */
-const SCALE = 0.5;
+const SCALE = 0.75;
 const BASE_HEALTH = 2;
 
 export default class ArcherGoblin extends Enemy {
   constructor(scene, x, y, health = BASE_HEALTH) {
-    super(scene, x, y, "skel-idle", health);
+    super(scene, x, y, "goblin-range-idle", health);
 
     this._ai = new ArcherAI();
     this._hasFired = false;
 
     this.setScale(SCALE);
-    this.setTint(0x66dd66);
-    this.body.setSize(20, 38);
-    this.body.setOffset(22, 22);
+    this.body.setSize(18, 26);
+    this.body.setOffset(9, 4);
     this.setDepth(5);
     this.body.setGravityY(0);
     this.body.setImmovable(true);
 
-    this.play("skel-idle");
+    this.play("goblin-range-idle");
   }
 
   /**

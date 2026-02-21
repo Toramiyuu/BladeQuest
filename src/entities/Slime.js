@@ -8,23 +8,23 @@ import { SLIME_HEALTH, MAX_DELTA_MS } from "../config/constants.js";
  * Receives a `groundLayer` reference (Phaser.Tilemaps.TilemapLayer or null).
  * When null (temp-ground mode), bounds detection uses world bounds only.
  */
-const SKEL_SCALE = 0.55;
+const SLIME_SCALE = 0.25;
 
 export default class Slime extends Enemy {
   constructor(scene, x, y, groundLayer = null) {
-    super(scene, x, y, "skel-idle", SLIME_HEALTH);
+    super(scene, x, y, "slime-idle", SLIME_HEALTH);
 
     this._ai = new SlimeAI();
     this._groundLayer = groundLayer;
 
-    this.setScale(SKEL_SCALE);
-    this.body.setSize(24, 40);
-    this.body.setOffset(20, 20);
+    this.setScale(SLIME_SCALE);
+    this.body.setSize(22, 18);
+    this.body.setOffset(20, 24);
     this.setDepth(5);
     this.body.setGravityY(0);
     this.body.setMaxVelocityX(200);
 
-    this.play("skel-walk");
+    this.play("slime-walk");
   }
 
   /**
@@ -81,7 +81,7 @@ export default class Slime extends Enemy {
   _die() {
     this._isDead = true;
     this.body.enable = false;
-    this.play("skel-death");
+    this.play("slime-dead");
     this.once("animationcomplete", () => {
       this.scene.tweens.add({
         targets: this,

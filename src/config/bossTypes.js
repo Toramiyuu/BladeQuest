@@ -20,7 +20,7 @@ export const BOSS_TYPES = [
       walkKey: "hollow-knight-walk",
       deathKey: "hollow-knight-dead",
     },
-    hitbox: { w: 28, h: 44, ox: 50, oy: 40 },
+    hitbox: { w: 28, h: 44, ox: 21, oy: 13 },
     aiParams: {
       patrolSpeed: BOSS_PATROL_SPEED,
       chargeSpeed: BOSS_CHARGE_SPEED,

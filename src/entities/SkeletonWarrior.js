@@ -8,25 +8,24 @@ import { MAX_DELTA_MS } from "../config/constants.js";
  * Uses the skeleton sprite set with a red tint as a placeholder.
  * AI: walk → pause → lunge → recover (see SkeletonAI).
  */
-const SCALE = 0.6;
+const SCALE = 0.85;
 const BASE_HEALTH = 4;
 
 export default class SkeletonWarrior extends Enemy {
   constructor(scene, x, y, groundLayer = null, health = BASE_HEALTH) {
-    super(scene, x, y, "skel-idle", health);
+    super(scene, x, y, "goblin-melee-idle", health);
 
     this._ai = new SkeletonAI();
     this._groundLayer = groundLayer;
 
     this.setScale(SCALE);
-    this.setTint(0xff8866);
-    this.body.setSize(22, 42);
-    this.body.setOffset(21, 18);
+    this.body.setSize(20, 30);
+    this.body.setOffset(9, 3);
     this.setDepth(5);
     this.body.setGravityY(0);
     this.body.setMaxVelocityX(250);
 
-    this.play("skel-walk");
+    this.play("goblin-melee-walk");
   }
 
   /**
@@ -77,7 +76,7 @@ export default class SkeletonWarrior extends Enemy {
   _die() {
     this._isDead = true;
     this.body.enable = false;
-    this.play("skel-death");
+    this.play("goblin-melee-dead");
     this.once("animationcomplete", () => {
       this.scene.tweens.add({
         targets: this,
