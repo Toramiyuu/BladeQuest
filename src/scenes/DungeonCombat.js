@@ -150,12 +150,7 @@ export const DungeonCombatMixin = {
         onComplete: () => flash.destroy(),
       });
 
-      if (this._cameraTarget) {
-        this._cameraTarget.x += 1;
-        this.time.delayedCall(33, () => {
-          if (this._cameraTarget) this._cameraTarget.x -= 1;
-        });
-      }
+      this._spawnChromaFlash();
     }
   },
 
@@ -184,6 +179,7 @@ export const DungeonCombatMixin = {
       this._emitHealthChanged();
       this._audio?.play("playerHit");
       this.cameras.main.shake(80, 0.004);
+      this._spawnChromaFlash();
     }
   },
 
@@ -209,6 +205,7 @@ export const DungeonCombatMixin = {
       InventorySystem.getInventory().materials,
     );
     this._showDropText(enemy.x, enemy.y, drops);
+    this._spawnDeathParticles(enemy.x, enemy.y);
   },
 
   /** Floating damage number above enemy on hit. Yellow for heavy, white otherwise. */

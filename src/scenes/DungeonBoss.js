@@ -202,6 +202,14 @@ export const DungeonBossMixin = {
     this._bossDefeated = true;
     this._audio?.play("floorClear");
     SaveManager.clearBossFloor(this._currentFloor);
+    for (let i = 0; i < 3; i++) {
+      this.time.delayedCall(i * 110, () => {
+        if (!this.sys?.isActive()) return;
+        const ox = (Math.random() - 0.5) * 28;
+        const oy = (Math.random() - 0.5) * 28;
+        this._spawnDeathParticles(this._boss.x + ox, this._boss.y + oy);
+      });
+    }
 
     const drops = getDropsForEnemy("boss", this._currentFloor);
     if (drops.gold > 0) InventorySystem.addGold(drops.gold);

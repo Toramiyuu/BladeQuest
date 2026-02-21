@@ -8,6 +8,7 @@ import { DungeonCombatMixin } from "./DungeonCombat.js";
 import { DungeonBossMixin } from "./DungeonBoss.js";
 import { DungeonEventsMixin } from "./DungeonEvents.js";
 import { DungeonPotionMixin } from "./DungeonPotion.js";
+import { DungeonEffectsMixin } from "./DungeonEffects.js";
 import AudioManager from "../systems/AudioManager.js";
 import {
   MAX_DELTA_MS,
@@ -170,4 +171,5 @@ Object.assign(
   DungeonBossMixin,
   DungeonEventsMixin,
   DungeonPotionMixin,
+  DungeonEffectsMixin,
 );
